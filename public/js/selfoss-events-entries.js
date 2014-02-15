@@ -21,7 +21,7 @@ selfoss.events.entries = function(e) {
             return;
         
         var autoMarkAsRead = $('#config').data('auto_mark_as_read')=="1" && parent.hasClass('unread');
-        var mobileHideOnClose = $('#config').data('mobile_hide_on_close')=="1" && parent.hasClass('unread');
+        var mobileHideOnClose = $('#config').data('auto_hide_read_on_mobile')=="1" && parent.hasClass('unread');
         
         // anonymize
         selfoss.anonymize(parent.find('.entry-content'));
