@@ -651,7 +651,7 @@ input {
         }
         
     
-    .stream-more {
+    .stream-more, .mark-these-read {
         margin-top:20px;
         margin-bottom:10px;
         height:35px;
@@ -917,6 +917,9 @@ body.publicmode.notloggedin .entry-unread {
         height:100%;
     }
     
+    .mark-these-read {
+        display: none;
+    }
 }
 
 /* ipad and smartphone */
