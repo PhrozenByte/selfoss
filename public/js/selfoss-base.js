@@ -38,7 +38,7 @@ var selfoss = {
             }
         
             // set items per page
-            selfoss.filter.itemsPerPage = $('.entry').length;
+            selfoss.filter.itemsPerPage = $('#config').data('items_perpage');
             
             // initialize type by homepage config param
             selfoss.filter.type = $('#nav-filter li.active').attr('id').replace('nav-filter-', '');
@@ -169,6 +169,8 @@ var selfoss = {
                 // update sources
                 selfoss.refreshSources(data.sources);
 
+                selfoss.setUnreadCount(data.unread);
+
                 // clean up
                 $('#content').removeClass('loading');
                 selfoss.activeAjaxReq = null;
@@ -282,7 +284,40 @@ var selfoss = {
         error.unbind('click').click(function() {
             error.fadeOut();
         });
+    },
+
+    /**
+     * Setup fancyBox image viewer
+     * @param content element
+     * @param int
+     */
+    setupFancyBox: function(content, id) {
+        // Close existing fancyBoxes
+        $.fancybox.close();
+        var images = $(content).find('a[href$=".jpg"],a[href$=".jpeg"],a[href$=".png"],a[href$=".gif"]');
+        $(images).attr('rel', 'gallery-'+id).unbind('click');
+        $(images).fancybox({
+            helpers: {
+                overlay: {
+                    locked: false
+                }
+            }
+        });
+    },
+
+    /**
+     * show the unread count in the document title
+     * 
+     * @param int unread
+     */
+    setUnreadCount: function(unread) {
+        if(unread>0) {
+            $(document).attr('title', 'selfoss ('+unread+')');
+        } else {
+            $(document).attr('title', 'selfoss');
+        }
     }
+
 };
 
 selfoss.init();

@@ -269,7 +269,7 @@ input {
     }
 
     #nav-settings.nologin {
-        left:90px;
+        left:95px;
     }
     
     #nav-mobile {
@@ -402,6 +402,7 @@ input {
 
     .entry.selected.unread,
     .entry.unread {
+        margin-left: 3px;
         border-left:3px solid #5f9490;
     }
 
@@ -451,6 +452,12 @@ input {
         font-size:0.8em;
         white-space:nowrap;
     }
+
+        .entry-thumbnail img {
+            max-width:99%;
+            display: block;
+            margin: 0 10px 5px 0;
+        }
     
     .entry-content {
         display:none;
@@ -467,6 +474,7 @@ input {
         margin-top:20px;
         line-height: 1.7em;
         overflow: hidden;
+        padding: 0 1em;
     }
     
         .entry-content a {
@@ -539,6 +547,7 @@ input {
         display:none;
     }
 
+    .entry-author,
     .entry-source,
     .entry-separator,
     .entry-datetime {
@@ -629,6 +638,10 @@ input {
     
         .entry-sharedelicious {
             background-image:url(images/delicious.png);
+        }
+
+        .entry-sharewallabag {
+            background-image:url(images/wallabag.png);
         }
 
         .entry-smartphone-share li.entry-shareemail,
@@ -961,12 +974,27 @@ body.publicmode.notloggedin .entry-unread {
         width:120px;
     }
 
+    #nav-refresh,
+    #nav-settings,
+    #nav-logout,
+    #nav-login {
+        width:40px;
+    }
+    
+    #nav-settings {
+        left:65px;
+    }
+    
+    #nav-logout {
+        left:110px;
+    }
+    
     #nav-settings.nologin, #nav-refresh.nologin {
-        width:60px;
+        width:55px;
     }
 
     #nav-settings.nologin {
-        left:70px;
+        left:80px;
     }
     
     #nav-tags .color {
@@ -1181,6 +1209,7 @@ body.publicmode.notloggedin .entry-unread {
             border-top:1px solid #ccc;
         }
         
+        .entry-author,
         .entry-source,
         .entry-separator,
         .entry-datetime {
@@ -1201,6 +1230,7 @@ body.publicmode.notloggedin .entry-unread {
         .entry-content {
             line-height:1.5em;
             font-size:0.95em;
+            padding: 0;
         }
         
     .sp-container {
@@ -1303,3 +1333,19 @@ body.publicmode.notloggedin .entry-unread {
     
  }
  
+/* fancyBox */
+#fancybox-loading, .fancybox-close, .fancybox-prev span, .fancybox-next span {
+    background-image: url('images/fancybox_sprite.png');
+}
+
+#fancybox-loading div {
+    background: url('images/fancybox_loading.gif') center center no-repeat;
+}
+
+.fancybox-nav {
+    background: transparent url('images/blank.gif'); /* helps IE */
+}
+
+.fancybox-overlay {
+    background: url('images/fancybox_overlay.png');
+}

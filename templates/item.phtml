@@ -1,5 +1,6 @@
 <?PHP
     $title = $this->item['title'];
+    $author = $this->item['author'];
     //$content = html_entity_decode($this->item['content']);
     $content = str_replace('&#34;', '"', $this->item['content']);
     $sourcetitle = $this->item['sourcetitle'];
@@ -20,6 +21,7 @@
         "p" => "pocket",
         "r" => "readability",
         "d" => "delicious",
+        "w" => "wallabag",
         "e" => "email"
     );
 ?>
@@ -39,7 +41,7 @@
     
     <span class="entry-tags">
         <?PHP foreach($this->item['tags'] as $tag => $color) : ?>
-            <span class="entry-tags-tag" style="background-color:<?PHP echo $color; ?>"><?PHP echo $tag; ?></span>
+            <span class="entry-tags-tag" style="color:<?PHP echo $color['foreColor']; ?>;background-color:<?PHP echo $color['backColor']; ?>"><?PHP echo $tag; ?></span>
         <?PHP endforeach; ?>
     </span>
     
@@ -49,6 +51,12 @@
 
     <span class="entry-separator">&bull;</span>
 
+    <!-- author -->
+    <?PHP if(!empty($author)) : ?>
+    <span class="entry-author"><?PHP echo $author; ?></span>
+    <span class="entry-separator">&bull;</span>
+    <?PHP endif; ?>
+
     <!-- datetime -->
     <span class="entry-datetime">
         <?PHP echo $date; ?>
@@ -57,7 +65,9 @@
     <!-- thumbnail -->
     <?PHP if(isset($this->item['thumbnail']) && strlen(trim($this->item['thumbnail']))>0) : ?>
     <div class="entry-thumbnail">
-        <a href="<?PHP echo \helpers\Anonymizer::anonymize($this->item['link']); ?>" target="_blank"><img src="<?PHP echo 'thumbnails/'.$this->item['thumbnail']; ?>" alt="<?PHP echo $this->item['title']; ?>" /></a>
+        <a href="<?PHP echo \helpers\Anonymizer::anonymize($this->item['link']); ?>" target="_blank">
+            <img src="<?PHP echo 'thumbnails/'.$this->item['thumbnail']; ?>" alt="<?PHP echo require_once('libs/htmLawed.php'); htmLawed(htmlspecialchars_decode($this->item['title']), array("deny_attribute" => "*", "elements" => "-*")); ?>" />
+        </a>
     </div>
     <?PHP endif; ?>
     

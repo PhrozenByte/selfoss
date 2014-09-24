@@ -119,9 +119,8 @@ selfoss.shortcuts = {
         
         // 'r': Reload the current view
         $(document).bind('keydown', 'r', function(e) {
-            selfoss.reloadList();
             e.preventDefault();
-            return false;
+            $('#nav-filter-unread').click();
         });
         
         // 'Ctrl+m': mark all as read
@@ -229,6 +228,9 @@ selfoss.shortcuts = {
             // automark as read
             if($('#config').data('auto_mark_as_read')=="1" && current.hasClass('unread'))
                 current.find('.entry-unread').click();
+
+            // setup fancyBox image viewer
+            selfoss.setupFancyBox(content, content.parent().attr('id').substr(5));
         }
         
         // scroll to element
@@ -272,4 +274,4 @@ selfoss.shortcuts = {
         var content = $('.entry-content').is(':visible');
             selfoss.shortcuts.nextprev(direction, content);
     }
-}
+};
