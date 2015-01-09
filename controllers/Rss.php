@@ -18,6 +18,8 @@ class Rss extends BaseController {
      * @return void
      */
     public function rss() {
+        $this->needsLoggedInOrPublicMode();
+
         $feedWriter = new \RSS2FeedWriter();
         $feedWriter->setTitle(\F3::get('rss_title'));
         
@@ -96,7 +98,8 @@ class Rss extends BaseController {
             $contents[$o] = $this->unicode_entity_replace($contents[$o]);
             $swap .= $contents[$o];
         }
-        return mb_convert_encoding($swap,"UTF-8"); //not really necessary, but why not.
+        return html_entity_decode($swap, ENT_NOQUOTES, 'UTF-8'); //convert HTML-entities like &#8211; to UTF-8
+        
     }
 
     private function unicode_string_to_array( $string ) { //adjwilli

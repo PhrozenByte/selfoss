@@ -92,6 +92,7 @@ class Database {
                         tags        TEXT,
                         spout       TEXT NOT NULL,
                         params      TEXT NOT NULL,
+                        filter      TEXT,
                         error       TEXT,
                         lastupdate  INTEGER
                     );
@@ -108,7 +109,7 @@ class Database {
                 ');
                 
                 \F3::get('db')->exec('
-                    INSERT INTO version (version) VALUES (5);
+                    INSERT INTO version (version) VALUES (7);
                 ');
                 
                 \F3::get('db')->exec('
@@ -168,6 +169,14 @@ class Database {
                     ');
                     \F3::get('db')->exec('
                         INSERT INTO version (version) VALUES (5);
+                    ');
+                }
+                if(strnatcmp($version, "6") < 0){
+                    \F3::get('db')->exec('
+                        ALTER TABLE sources ADD filter TEXT;
+                    ');
+                    \F3::get('db')->exec('
+                        INSERT INTO version (version) VALUES (6);
                     ');
                 }
             }

@@ -19,6 +19,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function show() {
+        $this->needsLoggedIn();
+
         // get available spouts
         $spoutLoader = new \helpers\SpoutLoader();
         $this->view->spouts = $spoutLoader->all();
@@ -50,6 +52,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function add() {
+        $this->needsLoggedIn();
+
         $spoutLoader = new \helpers\SpoutLoader();
         $this->view->spouts = $spoutLoader->all();
         echo $this->view->render('templates/source.phtml');
@@ -63,6 +67,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function params() {
+        $this->needsLoggedIn();
+
         if(!isset($_GET['spout']))
             $this->view->error('no spout type given');
         
@@ -120,6 +126,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function write() {
+        $this->needsLoggedIn();
+
         $sourcesDao = new \daos\Sources();
 
         // read data
@@ -134,10 +142,12 @@ class Sources extends BaseController {
         $title = htmlspecialchars($data['title']);
         $tags = htmlspecialchars($data['tags']);
         $spout = $data['spout'];
+        $filter = $data['filter'];
         $isAjax = isset($data['ajax']);
         
         unset($data['title']);
         unset($data['spout']);
+        unset($data['filter']);
         unset($data['tags']);
         unset($data['ajax']);
 
@@ -151,9 +161,9 @@ class Sources extends BaseController {
         $id = \F3::get('PARAMS["id"]');
         
         if (!$sourcesDao->isValid('id', $id))
-            $id = $sourcesDao->add($title, $tags, $spout, $data);
+            $id = $sourcesDao->add($title, $tags, $filter, $spout, $data);
         else
-            $sourcesDao->edit($id, $title, $tags, $spout, $data);
+            $sourcesDao->edit($id, $title, $tags, $filter, $spout, $data);
         
         // autocolor tags
         $tagsDao = new \daos\Tags();
@@ -191,6 +201,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function remove() {
+        $this->needsLoggedIn();
+
         $id = \F3::get('PARAMS["id"]');
 
         $sourceDao = new \daos\Sources();
@@ -218,6 +230,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function listSources() {
+        $this->needsLoggedIn();
+
         $itemDao = new \daos\Items();
         
         // load sources
@@ -243,6 +257,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function spouts() {
+        $this->needsLoggedIn();
+
         $spoutLoader = new \helpers\SpoutLoader();
         $spouts = $spoutLoader->all();
         $this->view->jsonSuccess($spouts);
@@ -256,6 +272,8 @@ class Sources extends BaseController {
      * @return void
      */
     public function stats() {
+        $this->needsLoggedInOrPublicMode();
+
         $itemDao = new \daos\Items();
         
         // load sources

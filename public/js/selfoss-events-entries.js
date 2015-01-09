@@ -21,7 +21,7 @@ selfoss.events.entries = function(e) {
             return;
         
         var autoMarkAsRead = $('#config').data('auto_mark_as_read')=="1" && parent.hasClass('unread');
-        var mobileHideOnClose = $('#config').data('auto_hide_read_on_mobile')=="1" && parent.hasClass('unread');
+        var autoHideReadOnMobile = $('#config').data('auto_hide_read_on_mobile')=="1" && parent.hasClass('unread');
         
         // anonymize
         selfoss.anonymize(parent.find('.entry-content'));
@@ -63,7 +63,7 @@ selfoss.events.entries = function(e) {
             fullscreen.find('.entry, .entry-close').click(function(e) {
                 if(e.target.tagName.toLowerCase()=="a")
                     return;
-                if(mobileHideOnClose && ($('#entrr'+parent.attr('id').substr(5)).hasClass('unread')==false)) {
+                if(autoHideReadOnMobile && ($('#entrr'+parent.attr('id').substr(5)).hasClass('unread')==false)) {
                     $('#'+parent.attr('id')).hide();
                 }
                 content.show();
@@ -96,6 +96,14 @@ selfoss.events.entries = function(e) {
 
                 // setup fancyBox image viewer
                 selfoss.setupFancyBox(content, parent.attr('id').substr(5));
+
+                // scroll to article header
+                parent.get(0).scrollIntoView();
+
+                // turn of column view if entry is too long
+                if(content.height() > $(window).height() ) {
+                    content.addClass('entry-content-nocolumns');
+                }
             }
             
             // load images not on mobile devices

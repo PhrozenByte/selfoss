@@ -150,6 +150,9 @@ class Items extends Database {
      */
     public function findAll($itemsInFeed) {
         $itemsFound = array();
+        if( count($itemsInFeed) < 1 )
+            return $itemsFound;
+
         array_walk($itemsInFeed, function( &$value ) { $value = \F3::get('db')->quote($value); });
         $query = 'SELECT uid AS uid FROM '.\F3::get('db_prefix').'items WHERE uid IN ('. implode(',', $itemsInFeed) .')';
         $res = \F3::get('db')->query($query);
@@ -213,7 +216,7 @@ class Items extends Database {
         if(isset($options['tag']) && strlen($options['tag'])>0) {
             $params[':tag'] = array( "%,".$options['tag'].",%" , \PDO::PARAM_STR );
             if ( \F3::get( 'db_type' ) == 'mysql' ) {
-              $where .= " AND ( CONCAT( ',' , sources.tags , ',' ) LIKE :tag ) ";
+              $where .= " AND ( CONCAT( ',' , sources.tags , ',' ) LIKE _utf8 :tag COLLATE utf8_bin ) ";
             } else {
               $where .= " AND ( (',' || sources.tags || ',') LIKE :tag ) ";
             }
@@ -425,7 +428,7 @@ class Items extends Database {
         $select = 'SELECT count(*) AS amount FROM '.\F3::get('db_prefix').'items AS items, '.\F3::get('db_prefix').'sources AS sources';
         $where = ' WHERE items.source=sources.id AND unread=1';
         if ( \F3::get( 'db_type' ) == 'mysql' ) {
-            $where .= " AND ( CONCAT( ',' , sources.tags , ',' ) LIKE :tag ) ";
+            $where .= " AND ( CONCAT( ',' , sources.tags , ',' ) LIKE _utf8 :tag COLLATE utf8_bin ) ";
         } else {
             $where .= " AND ( (',' || sources.tags || ',') LIKE :tag ) ";
         }

@@ -34,7 +34,7 @@ UPDATE
 2. (IMPORTANT: don't delete the "data" folder) delete all old files and folders excluding the folder "data"
 3. upload all new files and folders excluding the data folder (IMPORTANT: also upload the invisible .htaccess files)
 4. Rename your folder /data/icons into /data/favicons
-5. Delete the files /public/all.css and /public/all.js
+5. Delete the files /public/all-v*.css and /public/all-v*.js
 6. Clean your browser cache
 7. insert your current database connection and your individual configuration in config.ini. Important: we change the config.ini and add new options in newer versions. You have to update the config.ini too.
 8. The database will be updated automatically (ensure that your database has enought rights for creating triggers)
@@ -53,6 +53,11 @@ APPS
 
 Third party apps are available for iOS and Android: [Cataracta](https://itunes.apple.com/us/app/cataracta/id817392033?mt=8&ign-mpt=uo%3D4) and [Selfoss](https://play.google.com/store/apps/details?id=fr.ydelouis.selfoss).
 
+
+DEVELOPMENT
+-----------
+
+Selfoss uses [git submodules](http://www.git-scm.com/book/en/Git-Tools-Submodules) for some external libaries. When you clone the repository you have to issue a `git submodule init` as well as a `git submodule update` to retrieve the external sources.
 
 CREDITS
 -------
@@ -76,5 +81,6 @@ Special thanks to the great programmers of this libraries which will be used in 
 * Spectrum Colorpicker: https://github.com/bgrins/spectrum
 * jQuery custom content scroller: http://manos.malihu.gr/jquery-custom-content-scroller/
 * twitter oauth library: https://github.com/abraham/twitteroauth
+* FullTextRSS: http://help.fivefilters.org/customer/portal/articles/223153-site-patterns
 
 Icon Source: http://blog.artcore-illustrations.de/aicons/

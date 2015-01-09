@@ -22,6 +22,16 @@
     <!-- app 'behaviour' when adding link to Android Home  -->
     <meta name="mobile-web-app-capable" content="yes" />
 
+    <!-- app tile and notification when adding link to Windows 8 start screen -->
+    <meta name="application-name" content="Selfoss" />
+    <meta name="msapplication-TileColor" content="#3d6d69" />
+    <meta name="msapplication-square70x70logo" content="<?php echo $this->base; ?>win8-70-icon.png" />
+    <meta name="msapplication-square150x150logo" content="<?php echo $this->base; ?>win8-150-icon.png" />
+    <meta name="msapplication-wide310x150logo" content="<?php echo $this->base; ?>win8-150-icon.png" />
+    <meta name="msapplication-square310x310logo" content="<?php echo $this->base; ?>win8-310-icon.png" />
+    <meta name="msapplication-notification" content="cycle=1; frequency=30; polling-uri=<?php echo $this->base; ?>win8notifs" />
+    <meta name="msapplication-badge" content="frequency=30; polling-uri=<?php echo $this->base; ?>badge" />
+
     <!--  RSS Feed -->
     <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="feed" />
     
@@ -32,7 +42,7 @@
     <?PHP if(\F3::get('use_system_font')!=true) : ?>
         <link rel="stylesheet" href="css/fonts.css" />
     <?PHP endif; ?>
-    <link rel="stylesheet" href="all.css" />
+    <link rel="stylesheet" href="<?PHP echo \helpers\View::getGlobalCssFileName(); ?>" />
 
 </head>
 <body class="
@@ -61,7 +71,8 @@
         data-auto_hide_read_on_mobile="<?PHP echo \F3::get('auto_hide_read_on_mobile'); ?>"
         data-auto_stream_more="<?PHP echo \F3::get('auto_stream_more'); ?>"
         data-load_images_on_mobile="<?PHP echo \F3::get('load_images_on_mobile'); ?>"
-        data-items_perpage="<?PHP echo \F3::get('items_perpage'); ?>" ></span>
+        data-items_perpage="<?PHP echo \F3::get('items_perpage'); ?>"
+        data-auto_hide_read_on_mobile="<?PHP echo \F3::get('auto_hide_read_on_mobile'); ?>"></span>
 
     <!-- menue open for smartphone -->
     <div id="nav-mobile">
@@ -140,6 +151,6 @@
     <!-- fullscreen popup -->
     <div id="fullscreen-entry"></div>
     
-    <script src="all.js"></script>
+    <script src="<?PHP echo \helpers\View::getGlobalJsFileName(); ?>"></script>
 </body>
 </html>
