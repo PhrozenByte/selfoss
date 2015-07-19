@@ -9,8 +9,11 @@
 /public/all.*
 /public/all-v*.*
 user.css
+user.js
 /_bin/*.*
 /_docs/website/forum
 config.ini
 .project
 node_modules
+_wiki
+.env

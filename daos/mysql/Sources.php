@@ -25,7 +25,7 @@ class Sources extends Database {
         // sanitize tag list
         $tags = implode(',', preg_split('/\s*,\s*/', trim($tags), -1, PREG_SPLIT_NO_EMPTY));
 
-        \F3::get('db')->exec('INSERT INTO '.\F3::get('db_prefix').'sources (title, tags, filter, spout, params, error) VALUES (:title, :tags, :filter, :spout, :params, "")',
+        return $this->stmt->insert('INSERT INTO '.\F3::get('db_prefix').'sources (title, tags, filter, spout, params) VALUES (:title, :tags, :filter, :spout, :params)',
                     array(
                         ':title'  => trim($title),
                         ':tags'   => $tags,
@@ -33,9 +33,6 @@ class Sources extends Database {
                         ':spout'  => $spout,
                         ':params' => htmlentities(json_encode($params))
                     ));
- 
-        $res = \F3::get('db')->exec('SELECT LAST_INSERT_ID() as lastid');
-        return $res[0]['lastid'];
     }
     
     
@@ -53,7 +50,7 @@ class Sources extends Database {
         // sanitize tag list
         $tags = implode(',', preg_split('/\s*,\s*/', trim($tags), -1, PREG_SPLIT_NO_EMPTY));
 
-        \F3::get('db')->exec('UPDATE '.\F3::get('db_prefix').'sources SET title=:title, tags=:tags, filter=:filter, spout=:spout, params=:params, error="" WHERE id=:id',
+        \F3::get('db')->exec('UPDATE '.\F3::get('db_prefix').'sources SET title=:title, tags=:tags, filter=:filter, spout=:spout, params=:params WHERE id=:id',
                     array(
                         ':title'  => trim($title),
                         ':tags'   => $tags,
@@ -88,12 +85,21 @@ class Sources extends Database {
      * @param int $id the source id
      * @param string $error error message
      */
-    public function error($id, $error="") {
-        \F3::get('db')->exec('UPDATE '.\F3::get('db_prefix').'sources SET error=:error WHERE id=:id',
-                    array(
-                        ':id'    => $id,
-                        ':error' => $error
-                    ));
+    public function error($id, $error) {
+        if (strlen($error) == 0) {
+            $arr = array(
+                ':id'    => $id
+                );
+            $setarg = 'NULL';
+        } else {
+            $arr = array(
+                ':id'    => $id,
+                ':error' => $error
+            );
+            $setarg = ':error';
+        }
+
+        \F3::get('db')->exec('UPDATE '.\F3::get('db_prefix').'sources SET error='.$setarg.' WHERE id=:id', $arr);
     }
 
 
@@ -118,7 +124,7 @@ class Sources extends Database {
      * @return mixed all sources
      */
     public function getByLastUpdate() {
-        $ret = \F3::get('db')->exec('SELECT id, title, tags, spout, params, filter, error FROM '.\F3::get('db_prefix').'sources ORDER BY lastupdate ASC');
+        $ret = \F3::get('db')->exec('SELECT id, title, tags, spout, params, filter, error, lastupdate FROM '.\F3::get('db_prefix').'sources ORDER BY lastupdate ASC');
         $spoutLoader = new \helpers\SpoutLoader();
         for($i=0;$i<count($ret);$i++)
             $ret[$i]['spout_obj'] = $spoutLoader->get( $ret[$i]['spout'] );
@@ -127,19 +133,79 @@ class Sources extends Database {
     
     
     /**
-     * returns all sources
+     * returns specified source (false if it doesnt exist) 
+     * or all sources if no id specified
+     *
+     * @param integer $id (optional) specification of source id
+     * @return mixed specified source or all sources
+     */
+    public function get($id = null) {
+        // select source by id if specified or return all sources
+        if (isset($id)) {
+            $ret = \F3::get('db')->exec('SELECT id, title, tags, spout, params, filter, error FROM '.\F3::get('db_prefix').'sources WHERE id=:id',
+                                    array(':id' => $id));
+            $spoutLoader = new \helpers\SpoutLoader();
+            if (isset($ret[0])) {
+                $ret = $ret[0];
+                $ret['spout_obj'] = $spoutLoader->get( $ret['spout'] );
+            } else {
+                $ret = false;    
+            }
+        } else { 
+            $ret = \F3::get('db')->exec('SELECT id, title, tags, spout, params, filter, error FROM '.\F3::get('db_prefix').'sources ORDER BY error DESC, lower(title) ASC');
+            $spoutLoader = new \helpers\SpoutLoader();
+            for($i=0;$i<count($ret);$i++)
+                $ret[$i]['spout_obj'] = $spoutLoader->get( $ret[$i]['spout'] );
+        }
+        return $ret;
+    }
+    
+
+    /**
+     * returns all sources including unread count
      *
      * @return mixed all sources
      */
-    public function get() {
-        $ret = \F3::get('db')->exec('SELECT id, title, tags, spout, params, filter, error FROM '.\F3::get('db_prefix').'sources ORDER BY error DESC, lower(title) ASC');
+    public function getWithUnread() {
+        return \F3::get('db')->exec('SELECT
+            sources.id, sources.title, COUNT(items.id) AS unread
+            FROM '.\F3::get('db_prefix').'sources AS sources
+            LEFT OUTER JOIN '.\F3::get('db_prefix').'items AS items
+                 ON (items.source=sources.id AND '.$this->stmt->isTrue('items.unread').')
+            GROUP BY sources.id, sources.title
+            ORDER BY lower(sources.title) ASC');
+    }
+    
+
+    /**
+     * returns all sources including last icon
+     *
+     * @return mixed all sources
+     */
+    public function getWithIcon() {
+        $ret = \F3::get('db')->exec('SELECT
+                sources.id, sources.title, sources.tags, sources.spout,
+                sources.params, sources.filter, sources.error,
+                sourceicons.icon AS icon
+            FROM '.\F3::get('db_prefix').'sources AS sources
+            LEFT OUTER JOIN
+                (SELECT items.source, icon
+                 FROM '.\F3::get('db_prefix').'items,
+                      (SELECT source, MAX(id) as maxid
+                       FROM '.\F3::get('db_prefix').'items
+                       WHERE icon IS NOT NULL AND icon != \'\'
+                       GROUP BY items.source) AS icons
+                 WHERE items.id=icons.maxid AND items.source=icons.source
+                 ) AS sourceicons
+                ON sources.id=sourceicons.source
+            ORDER BY '.$this->stmt->nullFirst('sources.error', 'DESC').', lower(sources.title)');
         $spoutLoader = new \helpers\SpoutLoader();
         for($i=0;$i<count($ret);$i++)
             $ret[$i]['spout_obj'] = $spoutLoader->get( $ret[$i]['spout'] );
         return $ret;
     }
-    
-    
+
+
     /**
      * test if the value of a specified field is valid
      *

@@ -3,7 +3,7 @@
 $f3 = require(__DIR__.'/libs/f3/base.php');
 
 $f3->set('DEBUG',0);
-$f3->set('version','2.13-SNAPSHOT');
+$f3->set('version','2.14-SNAPSHOT');
 $f3->set('AUTOLOAD',__dir__.'/;libs/f3/;libs/;libs/WideImage/;daos/;libs/twitteroauth/;libs/FeedWriter/;libs/fulltextrss/content-extractor/;libs/fulltextrss/readability/');
 $f3->set('cache',__dir__.'/data/cache');
 $f3->set('BASEDIR',__dir__);
@@ -15,6 +15,14 @@ $f3->config('defaults.ini');
 // read config, if it exists
 if(file_exists('config.ini'))
     $f3->config('config.ini');
+
+// overwrite config with ENV variables
+$env_prefix = $f3->get('env_prefix');
+foreach($f3->get('ENV') as $key => $value) {
+    if(strncasecmp($key,$env_prefix,strlen($env_prefix)) == 0) {
+        $f3->set(strtolower(substr($key,strlen($env_prefix))),$value);
+    }
+}
 
 // init logger
 $f3->set(

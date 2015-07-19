@@ -4,7 +4,7 @@
 
     <meta charset="utf-8">
 
-    <title>selfoss<?PHP echo $this->statsUnread>0 ? ' ('.$this->statsUnread.')' : ''; ?></title>
+    <title><?PHP echo trim(\F3::get('html_title')); echo $this->statsUnread>0 ? ' ('.$this->statsUnread.')' : ''; ?></title>
     
     <meta name="description" content="selfoss" />
     <meta name="author" content="Tobias Zeising" />
@@ -66,16 +66,18 @@
     <!-- other settings -->
     <span id="config"
         data-anonymizer="<?PHP echo \helpers\Anonymizer::getAnonymizer(); ?>"
+        data-share="<?PHP echo \F3::get('share'); ?>"
         data-wallabag="<?PHP echo \F3::get('wallabag'); ?>"
         data-auto_mark_as_read="<?PHP echo \F3::get('auto_mark_as_read'); ?>"
         data-auto_stream_more="<?PHP echo \F3::get('auto_stream_more'); ?>"
         data-load_images_on_mobile="<?PHP echo \F3::get('load_images_on_mobile'); ?>"
         data-items_perpage="<?PHP echo \F3::get('items_perpage'); ?>"
-        data-auto_hide_read_on_mobile="<?PHP echo \F3::get('auto_hide_read_on_mobile'); ?>"></span>
+        data-auto_hide_read_on_mobile="<?PHP echo \F3::get('auto_hide_read_on_mobile'); ?>"
+        data-html_title="<?PHP echo trim(\F3::get('html_title')); ?>"></span>
 
     <!-- menue open for smartphone -->
     <div id="nav-mobile">
-        <div id="nav-mobile-logo"></div>
+        <div id="nav-mobile-logo"><span class="unread-count<?PHP echo $this->statsUnread>0 ? ' unread' : ''; ?>"><?PHP echo $this->statsUnread; ?></span></div>
         <div id="nav-mobile-settings"></div>
     </div>
     
@@ -87,7 +89,7 @@
         <?PHP $active = (\F3::get('homepage')) ? \F3::get('homepage') : 'newest' ?>
         <ul id="nav-filter">
             <li id="nav-filter-newest" class="nav-filter-newest<?PHP if($active=='newest') : ?> active<?PHP endif; ?>"><?PHP echo \F3::get('lang_newest')?> <span><?PHP echo $this->statsAll; ?></span></li>
-            <li id="nav-filter-unread" class="nav-filter-unread<?PHP if($active=='unread') : ?> active<?PHP endif; ?>"><?PHP echo \F3::get('lang_unread')?> <span <?PHP echo $this->statsUnread>0 ? 'class="unread"' : ''; ?>><?PHP echo $this->statsUnread; ?></span></li>
+            <li id="nav-filter-unread" class="nav-filter-unread<?PHP if($active=='unread') : ?> active<?PHP endif; ?>"><?PHP echo \F3::get('lang_unread')?> <span class="unread-count<?PHP echo $this->statsUnread>0 ? ' unread' : ''; ?>"><?PHP echo $this->statsUnread; ?></span></li>
             <li id="nav-filter-starred" class="nav-filter-starred<?PHP if($active=='starred') : ?> active<?PHP endif; ?>"><?PHP echo \F3::get('lang_starred') ?> <span><?PHP echo $this->statsStarred; ?></span></li>
         </ul>
         

@@ -1,5 +1,3 @@
-AddHandler php5-cgi .php
-
 # Enable rewrite engine and route requests to framework
 RewriteEngine On
 #RewriteBase /selfoss
@@ -22,6 +20,11 @@ RewriteRule !thumbnails - [C]
 RewriteRule !public - [C]
 RewriteRule !index.php - [C]
 RewriteRule (.*) public/$1 [L]
+
+# set magic_quotes_gpc as f3 wouldn't start otherwise
+<IfModule mod_php5.c>
+    php_value magic_quotes_gpc "1"
+</IfModule>
 
 # deny requests for config files
 <FilesMatch ".(ini)$">

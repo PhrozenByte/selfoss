@@ -99,11 +99,6 @@ selfoss.events.entries = function(e) {
 
                 // scroll to article header
                 parent.get(0).scrollIntoView();
-
-                // turn of column view if entry is too long
-                if(content.height() > $(window).height() ) {
-                    content.addClass('entry-content-nocolumns');
-                }
             }
             
             // load images not on mobile devices
@@ -166,9 +161,6 @@ selfoss.events.entries = function(e) {
     
     $('.mark-these-read').unbind('click').click(function () {
         $('#nav-mark').click();
-        // hide nav on smartphone
-        if(selfoss.isSmartphone())
-            $('#nav-mobile-settings').click();
     });
 
     // more
@@ -189,7 +181,8 @@ selfoss.events.entries = function(e) {
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 streamMore.removeClass('loading');
-                selfoss.showError('Load more error: '+errorThrown);
+                selfoss.showError('Load more error: '+
+                                  textStatus+' '+errorThrown);
             }
         });
     });

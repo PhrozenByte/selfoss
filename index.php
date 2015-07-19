@@ -11,7 +11,7 @@ if($lang!='0' && $lang!='')
 $f3->set('auth', new \helpers\Authentication());
 
 // define js files
-$f3->set('js', array(
+$js=array(
     'public/js/jquery-2.1.1.min.js',
     'public/js/jquery-ui.js',
     'public/js/jquery.mCustomScrollbar.min.js',
@@ -20,6 +20,7 @@ $f3->set('js', array(
     'public/js/spectrum.js',
     'public/js/jquery.hotkeys.js',
     'public/js/selfoss-base.js',
+    'public/js/selfoss-shares.js',
     'public/js/selfoss-events.js',
     'public/js/selfoss-events-navigation.js',
     'public/js/selfoss-events-search.js',
@@ -28,7 +29,10 @@ $f3->set('js', array(
     'public/js/selfoss-events-sources.js',
     'public/js/selfoss-shortcuts.js',
     'public/js/jquery.fancybox.pack.js'
-));
+);
+if(file_exists("user.js"))
+    $js[] = "user.js";
+$f3->set('js', $js);
 
 // define css files
 $css = array(
@@ -77,6 +81,7 @@ $f3->route('GET    /source/params',     'controllers\Sources->params');       //
 $f3->route('GET    /sources',           'controllers\Sources->show');         // html
 $f3->route('GET    /source',            'controllers\Sources->add');          // html
 $f3->route('GET    /sources/list',      'controllers\Sources->listSources');  // json
+$f3->route('GET    /sources/stats',     'controllers\Sources->sourcesStats');  // json
 $f3->route('POST   /source/@id',        'controllers\Sources->write');        // json
 $f3->route('POST   /source',            'controllers\Sources->write');        // json
 $f3->route('DELETE /source/@id',        'controllers\Sources->remove');       // json

@@ -18,6 +18,7 @@ var selfoss = {
         type: 'newest',
         tag: '',
         source: '',
+        sourcesNav: false,
         ajax: true
     },
     
@@ -31,6 +32,16 @@ var selfoss = {
      */
     keepAliveIntervalID: null,
     
+    /**
+     * last stats update
+     */
+    lastStatsUpdate: Date.now(),
+    
+    /**
+     * the html title configured
+     */
+    htmlTitle: 'selfoss',
+
     /**
      * initialize application
      */
@@ -50,12 +61,21 @@ var selfoss = {
             
             // initialize type by homepage config param
             selfoss.filter.type = $('#nav-filter li.active').attr('id').replace('nav-filter-', '');
-            
+
+            // read the html title configured
+            selfoss.htmlTitle = $('#config').data('html_title')
+
+            // init shares
+            selfoss.shares.init();
+
             // init events
             selfoss.events.init();
             
             // init shortcut handler
             selfoss.shortcuts.init();
+
+            // setup periodic stats reloader
+            window.setInterval(selfoss.reloadStats, 60*1000);
         });
     },
     
@@ -182,26 +202,23 @@ var selfoss = {
             dataType: 'json',
             data: selfoss.filter,
             success: function(data) {
-                $('.nav-filter-newest span').html(data.all);
-                $('.nav-filter-unread span').html(data.unread);
-                $('.nav-filter-starred span').html(data.starred);
-                
+                selfoss.refreshStats(data.all, data.unread, data.starred);
+
                 $('#content').html(data.entries);
                 $(document).scrollTop(0);
                 selfoss.events.entries();
                 selfoss.events.search();
                 
-                // make unread itemcount red
-                if(data.unread>0)
-                    $('.nav-filter-unread span').addClass('unread');
-                
                 // update tags
                 selfoss.refreshTags(data.tags);
                 
-                // update sources
-                selfoss.refreshSources(data.sources);
-
-                selfoss.setUnreadCount(data.unread);
+                // drop loaded sources
+                if(selfoss.sourcesNavLoaded) {
+                    $('#nav-sources li').remove();
+                    selfoss.sourcesNavLoaded = false;
+                }
+                if(selfoss.filter.sourcesNav)
+                    selfoss.refreshSources(data.sources);
 
                 // clean up
                 $('#content').removeClass('loading');
@@ -213,12 +230,87 @@ var selfoss = {
                 else if (textStatus == "parsererror")
                     location.reload();
                 else if (errorThrown)
-                    selfoss.showError('Load list error: '+errorThrown);
+                    selfoss.showError('Load list error: '+
+                                      textStatus+' '+errorThrown);
+            }
+        });
+    },
+
+
+    /**
+     * refresh current stats.
+     *
+     * @return void
+     */
+    reloadStats: function() {
+        if( Date.now() - selfoss.lastStatsUpdate < 5*60*1000 )
+            return;
+
+        var stats_url = $('base').attr('href')+'stats?tags=true';
+        if( selfoss.filter.sourcesNav )
+            stats_url = stats_url + '&sources=true';
+
+        $.ajax({
+            url: stats_url,
+            type: 'GET',
+            success: function(data) {
+                if( data.unread>0 && $('.stream-empty').is(':visible') ) {
+                    selfoss.reloadList();
+                } else {
+                    selfoss.refreshStats(data.all, data.unread, data.starred);
+                    selfoss.refreshTags(data.tagshtml);
+
+                    if( 'sourceshtml' in data )
+                        selfoss.refreshSources(data.sourceshtml);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                selfoss.showError('Could not refresh stats: '+
+                                  textStatus+' '+errorThrown);
             }
         });
     },
     
+
+    /**
+     * refresh stats.
+     *
+     * @return void
+     * @param new all stats
+     * @param new unread stats
+     * @param new starred stats
+     */
+    refreshStats: function(all, unread, starred) {
+        selfoss.lastStatsUpdate = Date.now();
+
+        $('.nav-filter-newest span').html(all);
+        $('.nav-filter-starred span').html(starred);
+
+        selfoss.refreshUnread(unread);
+    },
+
     
+    /**
+     * refresh unread stats.
+     *
+     * @return void
+     * @param new unread stats
+     */
+    refreshUnread: function(unread) {
+        $('span.unread-count').html(unread);
+
+        // make unread itemcount red and show the unread count in the document
+        // title
+        if(unread>0) {
+            $('span.unread-count').addClass('unread');
+            $(document).attr('title', selfoss.htmlTitle+' ('+unread+')');
+        } else {
+            $('span.unread-count').removeClass('unread');
+            $(document).attr('title', selfoss.htmlTitle);
+        }
+    },
+
+
     /**
      * refresh current tags.
      *
@@ -236,7 +328,8 @@ var selfoss = {
                 selfoss.events.navigation();
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                selfoss.showError('Load tags error: '+errorThrown);
+                selfoss.showError('Load tags error: '+
+                                  textStatus+' '+errorThrown);
             },
             complete: function(jqXHR, textStatus) {
                 $('#nav-tags').removeClass('loading');
@@ -262,6 +355,8 @@ var selfoss = {
     },
     
     
+    sourcesNavLoaded: false,
+
     /**
      * refresh sources list.
      *
@@ -298,10 +393,10 @@ var selfoss = {
     
     
     /**
-     * anonymize links
+     * show error
      *
      * @return void
-     * @param parent element
+     * @param message string
      */
     showError: function(message) {
         if(typeof(message) == 'undefined') {
@@ -335,19 +430,6 @@ var selfoss = {
                 }
             }
         });
-    },
-
-    /**
-     * show the unread count in the document title
-     * 
-     * @param int unread
-     */
-    setUnreadCount: function(unread) {
-        if(unread>0) {
-            $(document).attr('title', 'selfoss ('+unread+')');
-        } else {
-            $(document).attr('title', 'selfoss');
-        }
     }
 
 };

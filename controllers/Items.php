@@ -145,11 +145,19 @@ class Items extends BaseController {
         $this->needsLoggedInOrPublicMode();
 
         $itemsDao = new \daos\Items();
-        $return = array(
-            'all'     => $itemsDao->numberOfItems(),
-            'unread'  => $itemsDao->numberOfUnread(),
-            'starred' => $itemsDao->numberOfStarred()
-        );
-        $this->view->jsonSuccess($return);
+        $stats = $itemsDao->stats();
+
+        if( array_key_exists('tags', $_GET) && $_GET['tags'] == 'true' ) {
+            $tagsDao = new \daos\Tags();
+            $tagsController = new \controllers\Tags();
+            $stats['tagshtml'] = $tagsController->renderTags($tagsDao->getWithUnread());
+        }
+        if( array_key_exists('sources', $_GET) && $_GET['sources'] == 'true' ) {
+            $sourcesDao = new \daos\Sources();
+            $sourcesController = new \controllers\Sources();
+            $stats['sourceshtml'] = $sourcesController->renderSources($sourcesDao->getWithUnread());
+        }
+
+        $this->view->jsonSuccess($stats);
     }
 }

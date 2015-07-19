@@ -35,7 +35,7 @@ class Database {
      */
     public function __construct() {
         if (self::$initialized === false && \F3::get('db_type')=="pgsql") {
-            // establish database connection
+            \F3::get('logger')->log("Establish database connection", \DEBUG);
             \F3::set('db', new \DB\SQL(
                 'pgsql:host=' . \F3::get('db_host') . ';port=' . \F3::get('db_port') . ';dbname='.\F3::get('db_database'),
                 \F3::get('db_username'),
@@ -114,7 +114,7 @@ class Database {
                 ');
                 
                 \F3::get('db')->exec('
-                    INSERT INTO version (version) VALUES (5);
+                    INSERT INTO version (version) VALUES (6);
                 ');
                 
                 \F3::get('db')->exec('
@@ -175,18 +175,16 @@ class Database {
                         INSERT INTO version (version) VALUES (5);
                     ');
                 }
-                if(strnatcmp($version, "5") < 0){
-                    \F3::get('db')->exec('
-                        ALTER TABLE sources ADD filter TEXT;
-                    ');
-                    \F3::get('db')->exec('
-                        INSERT INTO version (version) VALUES (6);
-                    ');
+                if(strnatcmp($version, "6") < 0){
+                    \F3::get('db')->exec(array(
+                        'ALTER TABLE sources ADD filter TEXT;',
+                        'INSERT INTO version (version) VALUES (6);'
+                    ));
                 }
             }
             
             // just initialize once
-            $initialized = true;
+            self::$initialized = true;
         }
     }
     
@@ -203,10 +201,6 @@ class Database {
      * @return  void
      */
     public function optimize() {
-        $result = @\F3::get('db')->exec("SELECT table_name FROM information_schema.tables WHERE table_schema='public'");
-        $tables = array();
-        foreach($result as $table)
-            foreach($table as $key=>$value)
-                @\F3::get('db')->exec("VACUUM ANALYZE " . $value);
+        \F3::get('db')->exec("VACUUM ANALYZE");
     }
 }
