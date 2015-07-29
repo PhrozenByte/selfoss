@@ -66,7 +66,7 @@ var selfoss = {
             selfoss.htmlTitle = $('#config').data('html_title')
 
             // init shares
-            selfoss.shares.init();
+            selfoss.shares.init($('#config').data('share'));
 
             // init events
             selfoss.events.init();
@@ -428,6 +428,59 @@ var selfoss = {
                 overlay: {
                     locked: false
                 }
+            }
+        });
+    },
+
+
+    /**
+     * Mark all visible items as read
+     */
+    markVisibleRead: function () {
+        var ids = new Array();
+        $('.entry.unread').each(function(index, item) {
+            ids.push( $(item).attr('id').substr(5) );
+        });
+
+        if(ids.length === 0){
+            return;
+        }
+
+        // show loading
+        var content = $('#content');
+        var articleList = content.html();
+        $('#content').addClass('loading').html("");
+
+        $.ajax({
+            url: $('base').attr('href') + 'mark',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                ids: ids
+            },
+            success: function(response) {
+                $('.entry').removeClass('unread');
+
+                // update unread stats
+                var unreadstats = parseInt($('.nav-filter-unread span').html()) - ids.length;
+                selfoss.refreshUnread(unreadstats);
+
+                // hide nav on smartphone if visible
+                if(selfoss.isSmartphone() && $('#nav').is(':visible')==true)
+                    $('#nav-mobile-settings').click();
+
+                // close opened entry
+                selfoss.events.itemId = null;
+
+                // refresh list
+                selfoss.reloadList();
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                content.html(articleList);
+                $('#content').removeClass('loading');
+                selfoss.events.entries();
+                selfoss.showError('Can not mark all visible item: '+
+                                    textStatus+' '+errorThrown);
             }
         });
     }

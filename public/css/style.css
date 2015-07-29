@@ -516,7 +516,7 @@ input {
         
         .entry-content pre,
         .entry-content blockquote {
-            overflow-x: auto;
+            overflow-x: unset;
         }
     
         .entry-content p,
@@ -621,48 +621,7 @@ input {
             display:none;
         }
         
-        .entry-toolbar .entry-sharegoogle {
-            border-left:1px solid #CCC;
-            padding-left:30px;
-            background-position: 10px center;
-        }
-        
-        .entry-sharegoogle {
-            background-image:url(images/googleplus.png);
-        }
-        
-        .entry-smartphone-share li.entry-sharetwitter,
-        .entry-toolbar li.entry-sharetwitter {
-            background-image:url(images/twitter.png);
-            background-size:16px 12px;
-        }
-        
-        .entry-sharefacebook {
-            background-image:url(images/facebook.png);
-        }
-        
-        .entry-sharepocket {
-            background-image:url(images/pocket.png);
-        }
 
-        .entry-sharereadability {
-            background-image:url(images/readability.png);
-        }
-    
-        .entry-sharedelicious {
-            background-image:url(images/delicious.png);
-        }
-
-        .entry-sharewallabag {
-            background-image:url(images/wallabag.png);
-        }
-
-        .entry-smartphone-share li.entry-shareemail,
-        .entry-toolbar li.entry-shareemail {
-            background-image:url(images/mail.png);
-            background-size:16px 10px;
-        }
-        
         .entry-toolbar .entry-close {
             display:none;
             width:32px;
@@ -723,6 +682,7 @@ input {
 }
 
 .source-edit-delete,
+.source-days,
 .source-action {
     display:inline;
     color:#aaa;
@@ -1316,6 +1276,15 @@ body.publicmode.notloggedin .entry-unread {
         display:none;
     }
     
+    img.entry-share {
+        float: left;
+        margin: 0 5px 0 0;
+    }
+
+    span.entry-share {
+        text-align:center;
+    }
+
     .entry-toolbar .entry-next {
         display:none;
     }
@@ -1379,3 +1348,6 @@ body.publicmode.notloggedin .entry-unread {
 .fancybox-overlay {
     background: url('images/fancybox_overlay.png');
 }
+
+/* emojis */
+img[src^='http://s.w.org/images/core/emoji']{display:inline;height: 1em;margin: 0;}
