@@ -28,7 +28,7 @@
             <li class="documentation">documentation</li>
             <li class="about">about</li>
             <li class="forum"><a href="/forum">forum</a></li>
-            <li class="download"><a href="https://github.com/SSilence/selfoss/releases/download/2.13/selfoss-2.14.zip">download</a></li>
+            <li class="download"><a href="https://github.com/SSilence/selfoss/releases/download/2.15/selfoss-2.16-SNAPSHOT.zip">download</a></li>
         </ul>
         
         <a id="header-fork" href="https://github.com/SSilence/selfoss"></a>
@@ -37,13 +37,12 @@
         
         <div id="header-just-updated"></div>
         
-        <a id="header-download" href="https://github.com/SSilence/selfoss/releases/download/2.13/selfoss-2.14.zip"><span>download selfoss 2.14</span></a>
+        <a id="header-download" href="https://github.com/SSilence/selfoss/releases/download/2.15/selfoss-2.16-SNAPSHOT.zip"><span>download selfoss 2.16-SNAPSHOT</span></a>
         
         <a id="header-donate" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=LR67F3T9DMSC8"><span>donate</span></a>
         
         <div id="header-appstores">
             <a href="https://play.google.com/store/apps/details?id=fr.ydelouis.selfoss"><img alt="Android app on Google Play" src="images/googleplay.png" /></a>
-            <a href="https://itunes.apple.com/us/app/cataracta/id817392033?mt=8&uo=4" target="itunes_store"><img src="images/appstore.png" /></a>
         </div>
         
         <div id="header-donate-tooltipp"><span>selfoss is completely free!<br />But if you like selfoss then feel free to donate the programmer a beer</span></div>
@@ -266,6 +265,10 @@ db_port=3306</code>
                         <td class="documentation-first-column">auto_mark_as_read</td>
                         <td>set this to 1 for automatically marking items as read after open/read them.</td>
                     </tr>
+		    <tr>
+                        <td class="documentation-first-column">auto_collapse</td>
+                        <td>set this to 1 for automatically collapsing items when another one is opened.</td>
+                    </tr>
                     <tr>
                         <td class="documentation-first-column">auto_stream_more</td>
                         <td>set this to 0 to disable autoloading of more items when you scroll down. With 1, a click on a button is required instead.</td>
@@ -435,8 +438,6 @@ db_port=3306</code>
                     If you want to get the newest entries from your own source (e.g. an IMAP Email Account, Log Files or any data from your own application), you can include a new spout in your selfoss stream by writing just one php class (saved in one php file).
                 </p>
                 <p>
-                    A german speaking tutorial on how to add own data sources can be found on <a href="http://www.aditu.de/2011/10/17/selfoss-eigene-datenquellen-erstellen/">http://www.aditu.de</a>.
-                
                     Create a new php file under <code>/spouts/your_spouts/your_spout.php</code> (choose a name for <code>your_spouts</code> and <code>your_spout</code>). The easiest way is to copy the <code><a href="https://github.com/SSilence/selfoss/blob/master/spouts/rss/feed.php">/spouts/rss/feed.php</a></code> and to modify this file.
                 </p>
                 
@@ -537,7 +538,7 @@ db_port=3306</code>
                 
                 <p>
                     More information about selfoss can be found on my german speaking blog <a href="http://www.aditu.de">http://www.aditu.de</a>.
-                    The icon was created by <a href="http://blog.artcore-illustrations.de/aicons/">Nadja (ArtCore)</a>, thanks for licensing it as CC.
+                    The icon was created by <a href="http://www.artcoreillustrations.com/">Nadja (ArtCore)</a>, thanks for licensing it as CC.
                 </p>
                 
                 <p>
@@ -562,7 +563,7 @@ db_port=3306</code>
             |
             <a href="http://www.aditu.de//#filter=.blog">Blog</a>
             |
-            logo by <a href="http://blog.artcore-illustrations.de/aicons/">ArtCore</a>
+            logo by <a href="http://www.artcoreillustrations.com/">ArtCore</a>
         </p>
         <p>
             &copy; by Tobias Zeising &sdot; <a href="mailto:tobias.zeising@aditu.de">tobias.zeising@aditu.de</a> &sdot; <a href="http://www.aditu.de">www.aditu.de</a>
