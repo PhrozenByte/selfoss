@@ -154,7 +154,7 @@ body * {
     }
 
     #nav-tags-wrapper  {
-        overflow:hidden;
+        overflow: auto;
     }
     
         .nav-tags-collapsed {

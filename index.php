@@ -14,7 +14,6 @@ $f3->set('auth', new \helpers\Authentication());
 $js=array(
     'public/js/jquery-2.1.1.min.js',
     'public/js/jquery-ui.js',
-    'public/js/jquery.mCustomScrollbar.min.js',
     'public/js/jquery.mousewheel.min.js',
     'public/js/lazy-image-loader.js',
     'public/js/spectrum.js',
@@ -36,7 +35,6 @@ $f3->set('js', $js);
 
 // define css files
 $css = array(
-    'public/css/jquery.mCustomScrollbar.css',
     'public/css/jquery.fancybox.css',
     'public/css/spectrum.css',
     'public/css/reset.css',
