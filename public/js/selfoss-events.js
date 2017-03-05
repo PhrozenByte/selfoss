@@ -19,11 +19,6 @@ selfoss.events = {
         }
 
         // window resize
-        $("#nav-tags-wrapper").mCustomScrollbar({
-            advanced:{
-                updateOnContentResize: true
-            }
-        });
         $(window).bind("resize", selfoss.events.resize);
         selfoss.events.resize();
         
@@ -101,7 +96,6 @@ selfoss.events = {
             $('#nav').show();
         } else {
             $('#nav-tags-wrapper').height("auto");
-            $("#nav-tags-wrapper").mCustomScrollbar("disable",selfoss.isSmartphone());
         }
     }
 };
