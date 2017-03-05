@@ -87,7 +87,23 @@ body * {
         #nav-mark:hover {
             color:#000000;
         }
+
+    #nav-filter-wrapper  {
+        overflow:hidden;
+    }
     
+        .nav-filter-collapsed {
+            cursor:pointer;
+            padding-left: 20px;
+            background: url(images/nav-collapsed.png) center left no-repeat;
+        }
+        
+        .nav-filter-expanded {
+            cursor:pointer;
+            padding-left: 20px;
+            background: url(images/nav-expanded.png) center left no-repeat;
+        }
+
     #nav-filter-title {
         margin-top:20px;
     }
@@ -379,36 +395,6 @@ body * {
         cursor:pointer;
     }
     
-/* unread count below the fold */
-
-#floating-unread {
-    display: none;
-    width: 40px;
-    position: fixed;
-    left: 185px;
-    bottom: 5px;
-    text-align: center;
-}
-
-#floating-unread .floating-unread-count {
-    display: inline;
-    min-width: 8px;
-    padding: 0 5px 0 5px;
-    background-color: #E74C3C;
-    border-radius: 30px;
-    font-size: 0.6em;
-    color: white;
-}
-
-#floating-unread .bottom-triangle {
-    position: relative;
-    bottom: 3px;
-    margin: 0 15px;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 5px solid #E74C3C;
-}
-
 /* content */
 
 #content {
@@ -1084,10 +1070,6 @@ body.publicmode.notloggedin .entry-unread {
         margin-left:157px;
     }
     
-    #floating-unread {
-        display: none !important;
-    }
-
     .entry-toolbar {
         margin-left:-7px;
     }
