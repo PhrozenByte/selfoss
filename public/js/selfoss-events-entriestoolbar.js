@@ -7,7 +7,7 @@ selfoss.events.entriesToolbar = function(parent) {
     }
 
     // prevent close on links
-    parent.find('a').unbind('click').click(function(e) {
+    parent.find('.entry-content a').unbind('click').click(function(e) {
         window.open($(this).attr('href'));
         e.preventDefault();
         return false;
@@ -20,9 +20,11 @@ selfoss.events.entriesToolbar = function(parent) {
         return false;
     });
 
-    // open in new window
+    // open in new window and mark as read
     parent.find('.entry-newwindow').unbind('click').click(function(e) {
-        window.open($(this).parents('.entry').children('.entry-datetime').attr('href'));
+        var entry = $(this).parents('.entry');
+        entry.find('.entry-unread.active').click();
+        window.open(entry.children('.entry-datetime').attr('href'));
         e.preventDefault();
         return false;
     });

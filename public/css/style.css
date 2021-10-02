@@ -85,7 +85,7 @@ body * {
     #nav-mark {
         width:150px;
 		border: none;
-        padding:10px;
+        padding:5px;
         margin-left:15px;
         margin-right:15px;
         color:#d7d7d7;
@@ -121,14 +121,13 @@ body * {
     }
 
     #nav-filter {
-        margin-bottom:30px;
+        margin-bottom:10px;
     }
     
         #nav-filter li {
             color:#6a6a6a;
             padding:5px;
             padding-left:24px;
-            margin-top:5px;
             font-weight:normal;
             font-size:0.9em;
             cursor:pointer;
@@ -167,7 +166,7 @@ body * {
     }
 
     #nav-tags-wrapper  {
-        overflow:hidden;
+        overflow: auto;
     }
     
         .nav-tags-collapsed {
@@ -186,7 +185,7 @@ body * {
             position:relative;
             color:#b9b9b9;
             cursor:pointer;
-            padding:5px;
+            padding:2px;
             padding-left:25px;
             padding-right:30px;
             font-weight:lighter;
@@ -470,19 +469,22 @@ body * {
 
     .entry-title {
         cursor:pointer;
-        color:#999999;
         padding-top:7px;
         padding-bottom:7px;
     }
-    
-        .entry-title a {
-            color:#3d6d69;
-        }
-    
-        .entry.unread  .entry-title {
-            color:#333333;
-        }
-    
+
+    .entry-title,
+    .entry-title a {
+        color:#999999;
+        font-weight:normal;
+        text-decoration: none;
+    }
+
+    .entry.unread .entry-title,
+    .entry.unread .entry-title a {
+        color:#333333;
+    }
+
     .entry-tags-tag {
         border-radius:4px;
         padding:2px;
@@ -1344,8 +1346,12 @@ body.authenabled.loggedin #nav-logout {
     
         #fullscreen-entry .entry-title {
             padding-top:40px;
-            color:#333333;
             font-size:1.3em;
+        }
+
+        #fullscreen-entry .entry-title,
+        #fullscreen-entry .entry-title a {
+            color:#333333;
         }
         
         #fullscreen-entry .entry-content,
