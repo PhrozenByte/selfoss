@@ -1,4 +1,14 @@
 # selfoss news
+## 2.18.pb – 2021-10-02
+### New features
+ - Middle click on the title to open the entry in an new window
+ - Mark/Unmark entries on double click
+ - Mark entry as read when opening it in an new window
+ - Slim down navigation
+ - Add session keep alive
+ - Use native scrollbars rather than mCustomScrollbar
+ - Add ZDF Mediathek spout
+
 ## 2.18 – 2018-03-05
 ### New features
 - Full-text RSS spout is now able to extract content from PDFs ([#897](https://github.com/SSilence/selfoss/pull/897))

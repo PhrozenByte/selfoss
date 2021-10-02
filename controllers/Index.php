@@ -176,8 +176,8 @@ class Index extends BaseController {
             'loggedin' => (\F3::get('auth')->isLoggedin() === true)
         ));
     }
-    
-    
+
+
     /**
      * update feeds
      * text
