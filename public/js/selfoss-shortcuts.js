@@ -306,6 +306,7 @@ selfoss.shortcuts = {
 
         // open?
         if (!current.hasClass('stream-more') && open) {
+            current.find('.entry-title')[0].click(); // it is unclear why the [0] is necessary
             current.find('.entry-title').click();
         } else {
             selfoss.events.setHash();
