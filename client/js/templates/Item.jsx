@@ -367,6 +367,21 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
         [history, location, expanded, item.id]
     );
 
+    const iconOnClick = useCallback(
+        (event) => {
+            if (selfoss.isSmartphone()) {
+                event.preventDefault();
+            } else {
+                event.stopPropagation();
+
+                if (canWrite) {
+                    selfoss.entriesPage.markEntryRead(item.id, true);
+                }
+            }
+        },
+        [canWrite, item.id]
+    );
+
     const starOnClick = useCallback(
         (event) => {
             event.preventDefault();
@@ -439,9 +454,10 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                 href={item.link}
                 className="entry-icon"
                 tabIndex="-1"
-                rel="noreferrer"
                 aria-hidden="true"
-                onClick={preventDefaultOnSmartphone}
+                target="_blank"
+                rel="noreferrer"
+                onClick={iconOnClick}
             >
                 {item.icon !== null && item.icon.trim().length > 0 && item.icon != '0' ?
                     <img src={`favicons/${item.icon}`} aria-hidden="true" alt="" />
@@ -513,13 +529,18 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                 : null}
 
             {/* thumbnail */}
-            {item.thumbnail && item.thumbnail.trim().length > 0 ?
+            {item.thumbnail && item.thumbnail.trim().length > 0 &&
                 <div className={classNames({'entry-thumbnail': true, 'entry-thumbnail-always-visible': configuration.showThumbnails})}>
-                    <a href={item.link} target="_blank" rel="noreferrer">
+                    <a
+                        href={item.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={externalLinkOnClick}
+                    >
                         <img src={`thumbnails/${item.thumbnail}`} alt={item.strippedTitle} />
                     </a>
                 </div>
-                : null}
+            }
 
             {/* content */}
             <div className={classNames({'entry-content': true, 'entry-content-nocolumns': item.lengthWithoutTags < 500})}>
