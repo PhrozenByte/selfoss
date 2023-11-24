@@ -414,6 +414,15 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
         )
     });
 
+    const titleOnAuxClick = useCallback(
+        (event) => {
+            if (event.button === 1 && canWrite) {
+                selfoss.entriesPage.markEntryRead(item.id, true);
+            }
+        },
+        [canWrite, item.id]
+    );
+
     const iconOnClick = useCallback(
         (event) => {
             if (selfoss.isSmartphone()) {
@@ -518,6 +527,7 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                     aria-expanded={expanded}
                     aria-current={selected}
                     tabIndex="0"
+                    onAuxClick={titleOnAuxClick}
                     onKeyUp={handleKeyUp}
                     dangerouslySetInnerHTML={titleHtml}
                 />
