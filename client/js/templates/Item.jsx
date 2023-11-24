@@ -489,11 +489,11 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                 className="entry-title"
                 onClick={configuration.doubleClickMarkAsRead ? titleOnMultiClick : titleOnClick}
             >
-                <span
+                <a
+                    href={item.link}
                     className="entry-title-link"
                     aria-expanded={expanded}
                     aria-current={selected}
-                    role="link"
                     tabIndex="0"
                     onKeyUp={handleKeyUp}
                     dangerouslySetInnerHTML={titleHtml}
