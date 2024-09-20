@@ -64,7 +64,6 @@
               php.packages.composer
 
               # Back-end code validation.
-              php.packages.psalm
               php.packages.phpstan
 
               # npm for front-end.
@@ -72,6 +71,9 @@
 
               # For building zip archive and integration tests.
               python
+
+              # Python code linting.
+              pkgs.black
 
               # Website generator.
               pkgs.zola

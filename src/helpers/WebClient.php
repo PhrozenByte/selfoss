@@ -62,6 +62,12 @@ class WebClient {
                 ],
                 'handler' => $stack,
                 'timeout' => 60, // seconds
+                'curl' => [
+                    // Guzzle will not send Accept-Encoding by default.
+                    // https://github.com/guzzle/guzzle/pull/3215
+                    // Delegate choosing compression method to curl.
+                    \CURLOPT_ENCODING => '',
+                ],
             ]);
 
             $this->httpClient = $httpClient;
@@ -120,7 +126,7 @@ class WebClient {
      */
     public static function getEffectiveUrl(string $url, ResponseInterface $response): string {
         // Sequence of fetched URLs
-        $urlStack = array_merge([$url], $response->getHeader(\GuzzleHttp\RedirectMiddleware::HISTORY_HEADER));
+        $urlStack = array_merge([$url], $response->getHeader(GuzzleHttp\RedirectMiddleware::HISTORY_HEADER));
 
         return $urlStack[count($urlStack) - 1];
     }

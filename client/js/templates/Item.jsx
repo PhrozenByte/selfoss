@@ -13,7 +13,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from 'classnames';
 import { createFocusTrap } from 'focus-trap';
 import { useAllowedToWrite } from '../helpers/authorizations';
-import { forceReload, makeEntriesLink, makeEntriesLinkLocation } from '../helpers/uri';
+import {
+    forceReload,
+    makeEntriesLink,
+    makeEntriesLinkLocation,
+} from '../helpers/uri';
 import * as icons from '../icons';
 import { ConfigurationContext } from '../helpers/configuration';
 import { LocalizationContext } from '../helpers/i18n';
@@ -23,27 +27,35 @@ import Lightbox from 'yet-another-react-lightbox';
 
 // TODO: do the search highlights client-side
 function reHighlight(text) {
-    return text.split(/<span class="found">(.+?)<\/span>/).map((n, i) => i % 2 == 0 ? n : <span key={i} className="found">{n}</span>);
+    return text.split(/<span class="found">(.+?)<\/span>/).map((n, i) =>
+        i % 2 == 0 ? (
+            n
+        ) : (
+            <span key={i} className="found">
+                {n}
+            </span>
+        ),
+    );
 }
 
-function setupLightbox({
-    element,
-    setSlides,
-    setSelectedPhotoIndex,
-}) {
-    const images = element.querySelectorAll('a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"], a[href$=".jpg:large"], a[href$=".jpeg:large"], a[href$=".png:large"], a[href$=".gif:large"]');
+function setupLightbox({ element, setSlides, setSelectedPhotoIndex }) {
+    const images = element.querySelectorAll(
+        'a[href$=".jpg"], a[href$=".jpeg"], a[href$=".png"], a[href$=".gif"], a[href$=".jpg:large"], a[href$=".jpeg:large"], a[href$=".png:large"], a[href$=".gif:large"]',
+    );
 
-    setSlides(Array.from(images).map((link, index) => {
-        link.addEventListener('click', (event) => {
-            event.preventDefault();
+    setSlides(
+        Array.from(images).map((link, index) => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
 
-            setSelectedPhotoIndex(index);
-        });
+                setSelectedPhotoIndex(index);
+            });
 
-        return {
-            src: link.getAttribute('href'),
-        };
-    }));
+            return {
+                src: link.getAttribute('href'),
+            };
+        }),
+    );
 }
 
 function useMultiClickHandler(handler, delay = 400) {
@@ -100,7 +112,8 @@ function sanitizeContent(content) {
 
 function handleKeyUp(event) {
     // emulate clicking when using keyboard
-    if (event.keyCode === 13) { // ENTER key
+    if (event.keyCode === 13) {
+        // ENTER key
         event.target.click();
         event.preventDefault();
         event.stopPropagation();
@@ -170,13 +183,7 @@ function openNext(event) {
     });
 }
 
-function ShareButton({
-    label,
-    icon,
-    item,
-    action,
-    showLabel = true,
-}) {
+function ShareButton({ label, icon, item, action, showLabel = true }) {
     const shareOnClick = useCallback(
         (event) => {
             event.preventDefault();
@@ -186,10 +193,10 @@ function ShareButton({
                 id: item.id,
                 url: item.link,
                 // TODO: remove HTML
-                title: item.title
+                title: item.title,
             });
         },
-        [item, action]
+        [item, action],
     );
 
     return (
@@ -207,28 +214,28 @@ function ShareButton({
 
 ShareButton.propTypes = {
     label: PropTypes.string.isRequired,
-    icon: PropTypes.oneOfType([
-        PropTypes.string,
-        PropTypes.element,
-    ]).isRequired,
+    icon: PropTypes.oneOfType([PropTypes.string, PropTypes.element]).isRequired,
     item: PropTypes.object.isRequired,
     action: PropTypes.func.isRequired,
     showLabel: PropTypes.bool,
 };
 
-function ItemTag({tag, color}) {
+function ItemTag({ tag, color }) {
     const style = useMemo(
         () => ({ color: color.foreColor, backgroundColor: color.backColor }),
-        [color]
+        [color],
     );
 
     const link = useCallback(
         (location) => ({
             ...location,
-            ...makeEntriesLinkLocation(location, { category: `tag-${tag}`, id: null }),
+            ...makeEntriesLinkLocation(location, {
+                category: `tag-${tag}`,
+                id: null,
+            }),
             state: forceReload(location),
         }),
-        [tag]
+        [tag],
     );
 
     return (
@@ -270,7 +277,13 @@ function datetimeRelative(currentTime, datetime) {
     }
 }
 
-export default function Item({ currentTime, item, selected, expanded, setNavExpanded }) {
+export default function Item({
+    currentTime,
+    item,
+    selected,
+    expanded,
+    setNavExpanded,
+}) {
     const { title, author, sourcetitle } = item;
 
     const [fullScreenTrap, setFullScreenTrap] = useState(null);
@@ -282,7 +295,7 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
 
     const relDate = useMemo(
         () => datetimeRelative(currentTime, item.datetime),
-        [currentTime, item.datetime]
+        [currentTime, item.datetime],
     );
 
     const canWrite = useAllowedToWrite();
@@ -295,7 +308,9 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
 
     useEffect(() => {
         // Handle entry becoming/ceasing to be expanded.
-        const parent = document.querySelector(`.entry[data-entry-id="${item.id}"]`);
+        const parent = document.querySelector(
+            `.entry[data-entry-id="${item.id}"]`,
+        );
         if (expanded) {
             const firstExpansion = contentBlock.current.childElementCount === 0;
             if (firstExpansion) {
@@ -303,10 +318,15 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
 
                 sanitizeContent(contentBlock.current);
 
-                selfoss.extensionPoints.processItemContents(contentBlock.current);
+                selfoss.extensionPoints.processItemContents(
+                    contentBlock.current,
+                );
 
                 // load images not on mobile devices
-                if (selfoss.isMobile() == false || configuration.loadImagesOnMobile) {
+                if (
+                    selfoss.isMobile() == false ||
+                    configuration.loadImagesOnMobile
+                ) {
                     setImagesLoaded(true);
                     lazyLoadImages(contentBlock.current);
                 }
@@ -319,7 +339,11 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                 setNavExpanded((expanded) => {
                     // hide nav
                     if (expanded) {
-                        scrollTop = scrollTop - document.querySelector('#nav').getBoundingClientRect().height;
+                        scrollTop =
+                            scrollTop -
+                            document
+                                .querySelector('#nav')
+                                .getBoundingClientRect().height;
                         scrollTop = scrollTop < 0 ? 0 : scrollTop;
                         window.scrollTo({ top: scrollTop });
 
@@ -358,8 +382,13 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                     // turn of column view if entry is too long
                     requestAnimationFrame(() => {
                         // Delayed into next frame so that the entry is expanded when the height is being determined.
-                        if (contentBlock.current.getBoundingClientRect().height > document.body.clientHeight) {
-                            contentBlock.current.parentNode.classList.add('entry-content-nocolumns');
+                        if (
+                            contentBlock.current.getBoundingClientRect()
+                                .height > document.body.clientHeight
+                        ) {
+                            contentBlock.current.parentNode.classList.add(
+                                'entry-content-nocolumns',
+                            );
                         }
                     });
                 }
@@ -382,26 +411,46 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
     useEffect(() => {
         // Handle autoHideReadOnMobile setting.
         if (selfoss.isSmartphone() && !expanded && previouslyExpanded) {
-            const autoHideReadOnMobile = configuration.autoHideReadOnMobile && item.unread == 1;
+            const autoHideReadOnMobile =
+                configuration.autoHideReadOnMobile && item.unread == 1;
             if (autoHideReadOnMobile && item.unread != 1) {
-                selfoss.entriesPage.setEntries((entries) => entries.filter(({ id }) => id !== item.id));
+                selfoss.entriesPage.setEntries((entries) =>
+                    entries.filter(({ id }) => id !== item.id),
+                );
             }
         }
     }, [configuration, expanded, item.id, item.unread, previouslyExpanded]);
 
     const entryOnClick = useCallback(
-        (event) => handleToggleOpenClick({ event, history, location, expanded, id: item.id, target: '.entry' }),
+        (event) =>
+            handleToggleOpenClick({
+                event,
+                history,
+                location,
+                expanded,
+                id: item.id,
+                target: '.entry',
+            }),
         [history, location, expanded, item.id]
     );
 
     const titleOnClick = useCallback(
-        (event) => handleToggleOpenClick({ event, history, location, expanded, id: item.id, target: '.entry-title' }),
+        (event) =>
+            handleToggleOpenClick({
+                event,
+                history,
+                location,
+                expanded,
+                id: item.id,
+                target: '.entry-title',
+            }),
         [history, location, expanded, item.id]
     );
 
     const titleOnMultiClick = useMultiClickHandler({
         0: (event) => {
             event.preventDefault();
+            event.stopPropagation();
         },
         1: titleOnClick,
         2: useCallback(
@@ -444,7 +493,7 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
             event.stopPropagation();
             selfoss.entriesPage.markEntryStarred(item.id, item.starred != 1);
         },
-        [item]
+        [item],
     );
 
     const markReadOnClick = useCallback(
@@ -465,26 +514,30 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
 
     const loadImagesOnClick = useCallback(
         (event) => loadImages({ event, setImagesLoaded, contentBlock }),
-        []
+        [],
     );
 
     const closeOnClick = useCallback(
-        (event) => closeFullScreen({ event, history, location, entryId: item.id }),
-        [history, location, item.id]
+        (event) =>
+            closeFullScreen({ event, history, location, entryId: item.id }),
+        [history, location, item.id],
     );
 
     const titleHtml = useMemo(
         () => ({ __html: title ? title : selfoss.app._('no_title') }),
-        [title]
+        [title],
     );
 
     const sourceLink = useCallback(
         (location) => ({
             ...location,
-            ...makeEntriesLinkLocation(location, { category: `source-${item.source}`, id: null }),
+            ...makeEntriesLinkLocation(location, {
+                category: `source-${item.source}`,
+                id: null,
+            }),
             state: forceReload(location),
         }),
-        [item.source]
+        [item.source],
     );
 
     const _ = useContext(LocalizationContext);
@@ -492,15 +545,20 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
     const sharers = useSharers({ configuration, _ });
 
     return (
-        <div data-entry-id={item.id}
+        <div
+            data-entry-id={item.id}
             data-entry-source={item.source}
             data-entry-url={item.link}
-            className={classNames({entry: true, unread: item.unread == 1, expanded, selected})}
+            className={classNames({
+                entry: true,
+                unread: item.unread == 1,
+                expanded,
+                selected,
+            })}
             role="article"
             aria-modal={fullScreenTrap !== null}
             onClick={entryOnClick}
         >
-
             {/* icon */}
             <a
                 href={item.link}
@@ -511,9 +569,15 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                 rel="noreferrer"
                 onClick={iconOnClick}
             >
-                {item.icon !== null && item.icon.trim().length > 0 && item.icon != '0' ?
-                    <img src={`favicons/${item.icon}`} aria-hidden="true" alt="" />
-                    : null}
+                {item.icon !== null &&
+                item.icon.trim().length > 0 &&
+                item.icon != '0' ? (
+                    <img
+                        src={`favicons/${item.icon}`}
+                        aria-hidden="true"
+                        alt=""
+                    />
+                ) : null}
             </a>
 
             {/* title */}
@@ -534,13 +598,9 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
             </h3>
 
             <span className="entry-tags">
-                {Object.entries(item.tags).map(([tag, color]) =>
-                    <ItemTag
-                        key={tag}
-                        tag={tag}
-                        color={color}
-                    />
-                )}
+                {Object.entries(item.tags).map(([tag, color]) => (
+                    <ItemTag key={tag} tag={tag} color={color} />
+                ))}
             </span>
 
             {/* source */}
@@ -555,17 +615,20 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
             <span className="entry-separator">•</span>
 
             {/* author */}
-            {author !== null ?
+            {author !== null ? (
                 <React.Fragment>
                     <span className="entry-author">{author}</span>
                     <span className="entry-separator">•</span>
                 </React.Fragment>
-                : null}
+            ) : null}
 
             {/* datetime */}
             <a
                 href={item.link}
-                className={classNames({'entry-datetime': true, timestamped: relDate === null})}
+                className={classNames({
+                    'entry-datetime': true,
+                    timestamped: relDate === null,
+                })}
                 target="_blank"
                 rel="noreferrer"
                 onClick={preventDefaultOnSmartphone}
@@ -574,45 +637,67 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
             </a>
 
             {/* read time */}
-            {configuration.readingSpeed !== null ?
+            {configuration.readingSpeed !== null ? (
                 <React.Fragment>
                     <span className="entry-separator">•</span>
-                    <span className="entry-readtime">{_('article_reading_time', [Math.round(item.wordCount / configuration.readingSpeed)])}</span>
+                    <span className="entry-readtime">
+                        {_('article_reading_time', [
+                            Math.round(
+                                item.wordCount / configuration.readingSpeed,
+                            ),
+                        ])}
+                    </span>
                 </React.Fragment>
-                : null}
+            ) : null}
 
             {/* thumbnail */}
             {item.thumbnail && item.thumbnail.trim().length > 0 &&
-                <div className={classNames({'entry-thumbnail': true, 'entry-thumbnail-always-visible': configuration.showThumbnails})}>
+                <div
+                    className={classNames({
+                        'entry-thumbnail': true,
+                        'entry-thumbnail-always-visible':
+                            configuration.showThumbnails,
+                    })}
+                >
                     <a
                         href={item.link}
                         target="_blank"
                         rel="noreferrer"
                         onClick={externalLinkOnClick}
                     >
-                        <img src={`thumbnails/${item.thumbnail}`} alt={item.strippedTitle} />
+                        <img
+                            src={`thumbnails/${item.thumbnail}`}
+                            alt={item.strippedTitle}
+                        />
                     </a>
                 </div>
             }
 
             {/* content */}
-            <div className={classNames({'entry-content': true, 'entry-content-nocolumns': item.lengthWithoutTags < 500})}>
-                {slides.length !== 0 && <Lightbox
-                    open={selectedPhotoIndex !== null}
-                    index={selectedPhotoIndex}
-                    close={() => setSelectedPhotoIndex(null)}
-                    carousel={{
-                        finite: true,
-                    }}
-                    controller={{
-                        closeOnBackdropClick: true,
-                    }}
-                    on={{
-                        entered: () => selfoss.lightboxActive.update(true),
-                        exited: () => selfoss.lightboxActive.update(false),
-                    }}
-                    slides={slides}
-                />}
+            <div
+                className={classNames({
+                    'entry-content': true,
+                    'entry-content-nocolumns': item.lengthWithoutTags < 500,
+                })}
+            >
+                {slides.length !== 0 && (
+                    <Lightbox
+                        open={selectedPhotoIndex !== null}
+                        index={selectedPhotoIndex}
+                        close={() => setSelectedPhotoIndex(null)}
+                        carousel={{
+                            finite: true,
+                        }}
+                        controller={{
+                            closeOnBackdropClick: true,
+                        }}
+                        on={{
+                            entered: () => selfoss.lightboxActive.update(true),
+                            exited: () => selfoss.lightboxActive.update(false),
+                        }}
+                        slides={slides}
+                    />
+                )}
 
                 <div ref={contentBlock} />
 
@@ -627,7 +712,8 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                                 accessKey="o"
                                 onClick={externalLinkOnClick}
                             >
-                                <FontAwesomeIcon icon={icons.openWindow} /> {_('open_window')}
+                                <FontAwesomeIcon icon={icons.openWindow} />{' '}
+                                {_('open_window')}
                             </a>
                         </li>
                         {sharers.map(({ key, label, icon, action }) => (
@@ -641,8 +727,14 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                             </li>
                         ))}
                         <li>
-                            <button type="button" accessKey="n" className="entry-next" onClick={openNext}>
-                                <FontAwesomeIcon icon={icons.next} /> {_('next')}
+                            <button
+                                type="button"
+                                accessKey="n"
+                                className="entry-next"
+                                onClick={openNext}
+                            >
+                                <FontAwesomeIcon icon={icons.next} />{' '}
+                                {_('next')}
                             </button>
                         </li>
                     </ul>
@@ -651,28 +743,48 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
 
             {/* toolbar */}
             <ul aria-label={_('article_actions')} className="entry-toolbar">
-                {canWrite &&
+                {canWrite && (
                     <li>
                         <button
                             accessKey="a"
-                            className={classNames({'entry-starr': true, active: item.starred == 1})}
+                            className={classNames({
+                                'entry-starr': true,
+                                active: item.starred == 1,
+                            })}
                             onClick={starOnClick}
                         >
-                            <FontAwesomeIcon icon={item.starred == 1 ? icons.unstar : icons.star} /> {item.starred == 1 ? _('unstar') : _('star')}
+                            <FontAwesomeIcon
+                                icon={
+                                    item.starred == 1
+                                        ? icons.unstar
+                                        : icons.star
+                                }
+                            />{' '}
+                            {item.starred == 1 ? _('unstar') : _('star')}
                         </button>
                     </li>
-                }
-                {canWrite &&
+                )}
+                {canWrite && (
                     <li>
                         <button
                             accessKey="u"
-                            className={classNames({'entry-unread': true, active: item.unread == 1})}
+                            className={classNames({
+                                'entry-unread': true,
+                                active: item.unread == 1,
+                            })}
                             onClick={markReadOnClick}
                         >
-                            <FontAwesomeIcon icon={item.unread == 1 ? icons.markRead : icons.markUnread} /> {item.unread == 1 ? _('mark') : _('unmark')}
+                            <FontAwesomeIcon
+                                icon={
+                                    item.unread == 1
+                                        ? icons.markRead
+                                        : icons.markUnread
+                                }
+                            />{' '}
+                            {item.unread == 1 ? _('mark') : _('unmark')}
                         </button>
                     </li>
-                }
+                )}
                 <li>
                     <a
                         href={item.link}
@@ -682,19 +794,28 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                         accessKey="o"
                         onClick={externalLinkOnClick}
                     >
-                        <FontAwesomeIcon icon={icons.openWindow} /> {_('open_window')}
+                        <FontAwesomeIcon icon={icons.openWindow} />{' '}
+                        {_('open_window')}
                     </a>
                 </li>
-                {!imagesLoaded ?
+                {!imagesLoaded ? (
                     <li>
-                        <button className="entry-loadimages" onClick={loadImagesOnClick}>
-                            <FontAwesomeIcon icon={icons.loadImages} /> {_('load_img')}
+                        <button
+                            className="entry-loadimages"
+                            onClick={loadImagesOnClick}
+                        >
+                            <FontAwesomeIcon icon={icons.loadImages} />{' '}
+                            {_('load_img')}
                         </button>
                     </li>
-                    : null
-                }
+                ) : null}
                 <li>
-                    <button type="button" accessKey="n" className="entry-next" onClick={openNext}>
+                    <button
+                        type="button"
+                        accessKey="n"
+                        className="entry-next"
+                        onClick={openNext}
+                    >
                         <FontAwesomeIcon icon={icons.next} /> {_('next')}
                     </button>
                 </li>
@@ -710,8 +831,13 @@ export default function Item({ currentTime, item, selected, expanded, setNavExpa
                     </li>
                 ))}
                 <li>
-                    <button accessKey="c" className="entry-close" onClick={closeOnClick}>
-                        <FontAwesomeIcon icon={icons.close} /> {_('close_entry')}
+                    <button
+                        accessKey="c"
+                        className="entry-close"
+                        onClick={closeOnClick}
+                    >
+                        <FontAwesomeIcon icon={icons.close} />{' '}
+                        {_('close_entry')}
                     </button>
                 </li>
             </ul>

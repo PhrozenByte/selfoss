@@ -29,21 +29,21 @@ jobs:
         include:
           - php: '7.4'
             phpstan: true
-            cs_fixer: true
-            check_client: true
+            # These should be the same no matter the PHP version.
+            lint: true
           - php: '8.2'
             storage: mysql
           - php: '8.2'
             storage: postgresql
     name: 'Check with PHP ${{ matrix.php }} and ${{ matrix.storage }} storage backend'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v20
+        uses: cachix/install-nix-action@v27
 
       - name: Set up Nix cache
-        uses: cachix/cachix-action@v12
+        uses: cachix/cachix-action@v15
         with:
           name: fossar
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
@@ -54,7 +54,7 @@ jobs:
           sed -i 's/matrix.storage = "all";/matrix.storage = "${{ matrix.storage }}";/' flake.nix
 
       - name: Cache Node modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -66,7 +66,7 @@ jobs:
         run: |
           echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -77,22 +77,26 @@ jobs:
         run: nix-shell --run 'npm run install-dependencies'
 
       - name: Check front-end code
-        if: matrix.check_client
+        if: matrix.lint
         run: nix-shell --run 'npm run check:client'
 
       - name: Check syntax of back-end code
-        run: nix-shell --run 'npm run lint:server'
+        run: nix-shell --run 'npm run check:server:lint'
 
       - name: Lint back-end code
-        if: matrix.cs_fixer
-        run: nix-shell --run 'npm run cs:server'
+        if: matrix.lint
+        run: nix-shell --run 'npm run check:server:cs'
+
+      - name: Lint helper code
+        if: matrix.lint
+        run: nix-shell --run 'npm run check:helpers:cs'
 
       - name: Run unit tests
         run: nix-shell --run 'npm run test:server'
 
       - name: Analyse back-end code
         if: matrix.phpstan
-        run: nix-shell --run 'npm run analyse:server'
+        run: nix-shell --run 'npm run check:server:phpstan'
 
       - name: Run integration tests
         run: SELFOSS_TEST_STORAGE_BACKEND=${{ matrix.storage }} nix-shell --run 'npm run test:integration'
@@ -103,19 +107,19 @@ jobs:
     needs:
       - tests
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Nix
-        uses: cachix/install-nix-action@v20
+        uses: cachix/install-nix-action@v27
 
       - name: Set up Nix cache
-        uses: cachix/cachix-action@v12
+        uses: cachix/cachix-action@v15
         with:
           name: fossar
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Cache Node modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -127,7 +131,7 @@ jobs:
         run: |
           echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -142,14 +146,14 @@ jobs:
           echo "version=$(echo selfoss-*.zip | sed -e 's/^selfoss-//' -e 's/\.zip$//')" >> "$GITHUB_OUTPUT"
 
       - name: Upload the zipball to GitHub
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.zipball.outputs.file_name }}
           if-no-files-found: error
           path: ${{ steps.zipball.outputs.file_name }}
 
       - name: Upload the zipball to Cloudsmith
-        uses: jtojnar/action@feature-tags
+        uses: cloudsmith-io/action@v0.6.9
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         with:
           api-key: ${{ secrets.CLOUDSMITH_API_KEY }}
@@ -160,7 +164,7 @@ jobs:
           file: ${{ steps.zipball.outputs.file_name }}
           name: selfoss.zip
           version: ${{ steps.zipball.outputs.version }}
-          tags: version:latest
+          tags: "version:latest"
 
       - name: Prepare a changelog
         run: |
@@ -169,7 +173,7 @@ jobs:
           echo "CHANGES_EOF" >> $GITHUB_ENV
 
       - name: Create a release
-        uses: softprops/action-gh-release@v0.1.15
+        uses: softprops/action-gh-release@v2
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -136,17 +136,17 @@ class Items implements \daos\ItemsInterface {
                 :author
             )',
             [
-               ':datetime' => $values['datetime']->format('Y-m-d H:i:s'),
-               ':title' => $values['title']->getRaw(),
-               ':content' => $values['content']->getRaw(),
-               ':thumbnail' => $values['thumbnail'],
-               ':icon' => $values['icon'],
-               ':unread' => 1,
-               ':starred' => 0,
-               ':source' => $values['source'],
-               ':uid' => $values['uid'],
-               ':link' => $values['link'],
-               ':author' => $values['author'],
+                ':datetime' => $values['datetime']->format('Y-m-d H:i:s'),
+                ':title' => $values['title']->getRaw(),
+                ':content' => $values['content']->getRaw(),
+                ':thumbnail' => $values['thumbnail'],
+                ':icon' => $values['icon'],
+                ':unread' => 1,
+                ':starred' => 0,
+                ':source' => $values['source'],
+                ':uid' => $values['uid'],
+                ':link' => $values['link'],
+                ':author' => $values['author'],
             ]
         );
     }
@@ -456,40 +456,6 @@ class Items implements \daos\ItemsInterface {
     /**
      * return all thumbnails
      *
-     * @return string[] array with thumbnails
-     */
-    public function getThumbnails(): array {
-        $thumbnails = [];
-        $result = $this->database->exec('SELECT thumbnail
-                   FROM ' . $this->configuration->dbPrefix . 'items
-                   WHERE thumbnail!=""');
-        foreach ($result as $thumb) {
-            $thumbnails[] = $thumb['thumbnail'];
-        }
-
-        return $thumbnails;
-    }
-
-    /**
-     * return all icons
-     *
-     * @return string[] array with all icons
-     */
-    public function getIcons(): array {
-        $icons = [];
-        $result = $this->database->exec('SELECT icon
-                   FROM ' . $this->configuration->dbPrefix . 'items
-                   WHERE icon!=""');
-        foreach ($result as $icon) {
-            $icons[] = $icon['icon'];
-        }
-
-        return $icons;
-    }
-
-    /**
-     * return all thumbnails
-     *
      * @param string $thumbnail name
      *
      * @return bool true if thumbnail is still in use
@@ -627,7 +593,7 @@ class Items implements \daos\ItemsInterface {
 
                     // sanitize update time
                     if (array_key_exists('datetime', $status)) {
-                        $updateDate = new \DateTime($status['datetime']);
+                        $updateDate = new DateTime($status['datetime']);
                     } else {
                         $updateDate = null;
                     }
