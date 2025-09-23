@@ -38,19 +38,19 @@ class Rss {
      * rss feed
      */
     public function rss(): void {
-        $this->authentication->needsLoggedInOrPublicMode();
+        $this->authentication->ensureCanRead();
 
         $this->feedWriter->setTitle($this->configuration->rssTitle);
         $this->feedWriter->setChannelElement('description', '');
-        $this->feedWriter->setSelfLink($this->view->base . 'feed');
+        $this->feedWriter->setSelfLink($this->view->getBaseUrl() . 'feed');
 
-        $this->feedWriter->setLink($this->view->base);
+        $this->feedWriter->setLink($this->view->getBaseUrl());
 
         // get sources
         $lastSourceId = 0;
         $lastSourceName = '';
 
-        $options = ItemOptions::fromUser($_GET);
+        $options = new ItemOptions($_GET);
 
         // get items
         $newestEntryDate = null;

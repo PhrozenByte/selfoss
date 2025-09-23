@@ -23,8 +23,8 @@ class BasicWorkflowTest(SelfossIntegration):
                 url=fibonacci_feed_uri,
             )
             assert (
-                "Adding source is privileged operation and should fail without login."
-            )
+                False
+            ), "Adding source is privileged operation and should fail without login."
         except requests.exceptions.HTTPError as e:
             assert (
                 e.response.status_code == 403
@@ -56,6 +56,11 @@ class BasicWorkflowTest(SelfossIntegration):
         items = selfoss_api.get_items()
         assert not items[0]["unread"], "First item should now be marked as read"
         assert items[0]["starred"], "First item should now be starred"
+
+        items = selfoss_api.get_items(search="3")
+        assert (
+            len(items) == 5
+        ), "Search should find five fibonacci sequence numbers containing the digit 3"
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useOnline } from 'rooks';
-import { Link, useHistory } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 import { LoadingState } from '../requests/LoadingState';
 import { HttpError, UnexpectedStateError } from '../errors';
 import { importOpml } from '../requests/common';
@@ -11,7 +11,7 @@ export default function OpmlImport({ setTitle }) {
     const [message, setMessage] = useState(null);
     const fileEntry = useRef();
 
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const submit = useCallback(
         (event) => {
@@ -38,7 +38,7 @@ export default function OpmlImport({ setTitle }) {
                             </p>,
                         );
                     } else if (response.status === 202) {
-                        setState(LoadingState.ERROR);
+                        setState(LoadingState.FAILURE);
                         setMessage(
                             <p className="msg error">
                                 The following feeds could not be imported:
@@ -51,7 +51,7 @@ export default function OpmlImport({ setTitle }) {
                             </p>,
                         );
                     } else if (response.status === 400) {
-                        setState(LoadingState.ERROR);
+                        setState(LoadingState.FAILURE);
                         setMessage(
                             <p className="msg error">
                                 There was a problem importing your OPML file:
@@ -74,13 +74,13 @@ export default function OpmlImport({ setTitle }) {
                         error instanceof HttpError &&
                         error.response.status === 403
                     ) {
-                        history.push('/sign/in', {
+                        navigate('/sign/in', {
                             error: 'Importing OPML file requires being logged in or not setting “password” in selfoss configuration.',
                             returnLocation: '/opml',
                         });
                         return;
                     } else {
-                        setState(LoadingState.ERROR);
+                        setState(LoadingState.FAILURE);
                         setMessage(
                             <div className="msg error">
                                 Unexpected error occurred.
@@ -92,7 +92,7 @@ export default function OpmlImport({ setTitle }) {
                     }
                 });
         },
-        [history],
+        [navigate],
     );
 
     useEffect(() => {

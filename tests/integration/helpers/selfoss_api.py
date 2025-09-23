@@ -7,6 +7,13 @@ class SelfossApi:
         # We still use cookies for authentication so let’s persist them across requests.
         self.session = requests.Session()
 
+        self.session.headers.update(
+            {
+                # Pretend that we are coming from a different computer so that local authentication bypass does not happen.
+                "X-Forwarded-For": "1.2.3.4",
+            }
+        )
+
     def login(self, username, password):
         r = self.session.post(
             f"{self.base_uri}/login",
@@ -27,9 +34,10 @@ class SelfossApi:
 
         return r.json()
 
-    def get_items(self):
+    def get_items(self, **params):
         r = self.session.get(
             f"{self.base_uri}/items",
+            params=params,
         )
         r.raise_for_status()
 

@@ -7,14 +7,14 @@ import React, {
     useState,
 } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { usePreviousImmediate } from 'rooks';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from 'classnames';
 import { createFocusTrap } from 'focus-trap';
 import { useAllowedToWrite } from '../helpers/authorizations';
 import {
-    forceReload,
+    useForceReload,
     makeEntriesLink,
     makeEntriesLinkLocation,
 } from '../helpers/uri';
@@ -129,15 +129,15 @@ function preventDefaultOnSmartphone(event) {
 }
 
 // Handle closing fullscreen on mobile
-function closeFullScreen({ event, history, location, entryId }) {
+function closeFullScreen({ event, navigate, location, entryId }) {
     event.preventDefault();
     event.stopPropagation();
     selfoss.entriesPage.setEntryExpanded(entryId, false);
-    history.replace(makeEntriesLink(location, { id: null }));
+    navigate(makeEntriesLink(location, { id: null }), { replace: true });
 }
 
 // show/hide entry
-function handleToggleOpenClick({ event, history, location, expanded, id, target }) {
+function handleToggleOpenClick({ event, navigate, location, expanded, id, target }) {
     const expected = selfoss.isMobile() ? '.entry' : '.entry-title';
     if (target !== expected) {
         return;
@@ -149,10 +149,10 @@ function handleToggleOpenClick({ event, history, location, expanded, id, target 
     if (expanded) {
         selfoss.entriesPage.setSelectedEntry(id);
         selfoss.entriesPage.deactivateEntry(id);
-        history.replace(makeEntriesLink(location, { id: null }));
+        navigate(makeEntriesLink(location, { id: null }), { replace: true });
     } else {
         selfoss.entriesPage.activateEntry(id);
-        history.replace(makeEntriesLink(location, { id }));
+        navigate(makeEntriesLink(location, { id }), { replace: true });
     }
 }
 
@@ -226,17 +226,16 @@ function ItemTag({ tag, color }) {
         [color],
     );
 
-    const link = useCallback(
-        (location) => ({
-            ...location,
-            ...makeEntriesLinkLocation(location, {
+    const location = useLocation();
+    const link = useMemo(
+        () =>
+            makeEntriesLinkLocation(location, {
                 category: `tag-${tag}`,
                 id: null,
             }),
-            state: forceReload(location),
-        }),
-        [tag],
+        [tag, location],
     );
+    const forceReload = useForceReload();
 
     return (
         <Link
@@ -244,6 +243,7 @@ function ItemTag({ tag, color }) {
             style={style}
             to={link}
             onClick={preventDefaultOnSmartphone}
+            state={forceReload}
         >
             {tag}
         </Link>
@@ -291,7 +291,7 @@ export default function Item({
     const contentBlock = useRef(null);
 
     const location = useLocation();
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const relDate = useMemo(
         () => datetimeRelative(currentTime, item.datetime),
@@ -425,26 +425,26 @@ export default function Item({
         (event) =>
             handleToggleOpenClick({
                 event,
-                history,
+                navigate,
                 location,
                 expanded,
                 id: item.id,
                 target: '.entry',
             }),
-        [history, location, expanded, item.id]
+        [navigate, location, expanded, item.id]
     );
 
     const titleOnClick = useCallback(
         (event) =>
             handleToggleOpenClick({
                 event,
-                history,
+                navigate,
                 location,
                 expanded,
                 id: item.id,
                 target: '.entry-title',
             }),
-        [history, location, expanded, item.id]
+        [navigate, location, expanded, item.id]
     );
 
     const titleOnMultiClick = useMultiClickHandler({
@@ -519,8 +519,8 @@ export default function Item({
 
     const closeOnClick = useCallback(
         (event) =>
-            closeFullScreen({ event, history, location, entryId: item.id }),
-        [history, location, item.id],
+            closeFullScreen({ event, navigate, location, entryId: item.id }),
+        [navigate, location, item.id],
     );
 
     const titleHtml = useMemo(
@@ -528,17 +528,15 @@ export default function Item({
         [title],
     );
 
-    const sourceLink = useCallback(
-        (location) => ({
-            ...location,
-            ...makeEntriesLinkLocation(location, {
+    const sourceLink = useMemo(
+        () =>
+            makeEntriesLinkLocation(location, {
                 category: `source-${item.source}`,
                 id: null,
             }),
-            state: forceReload(location),
-        }),
-        [item.source],
+        [item.source, location],
     );
+    const forceReload = useForceReload();
 
     const _ = useContext(LocalizationContext);
 
@@ -608,6 +606,7 @@ export default function Item({
                 className="entry-source"
                 to={sourceLink}
                 onClick={preventDefaultOnSmartphone}
+                state={forceReload}
             >
                 {reHighlight(sourcetitle)}
             </Link>
@@ -616,10 +615,10 @@ export default function Item({
 
             {/* author */}
             {author !== null ? (
-                <React.Fragment>
+                <>
                     <span className="entry-author">{author}</span>
                     <span className="entry-separator">•</span>
-                </React.Fragment>
+                </>
             ) : null}
 
             {/* datetime */}
@@ -638,7 +637,7 @@ export default function Item({
 
             {/* read time */}
             {configuration.readingSpeed !== null ? (
-                <React.Fragment>
+                <>
                     <span className="entry-separator">•</span>
                     <span className="entry-readtime">
                         {_('article_reading_time', [
@@ -647,7 +646,7 @@ export default function Item({
                             ),
                         ])}
                     </span>
-                </React.Fragment>
+                </>
             ) : null}
 
             {/* thumbnail */}

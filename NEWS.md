@@ -11,6 +11,7 @@
 - Sources can be filtered based on item’s author, URL or categories. ([#1423](https://github.com/fossar/selfoss/pull/1423), [#1424](https://github.com/fossar/selfoss/pull/1424))
 - Source filter expression is now validated whenever a source is modified. ([#1423](https://github.com/fossar/selfoss/pull/1423))
 - Garbage collection can be completely disabled by setting `items_lifetime=0`.
+- Tamil (`ta`) translation was added.
 
 ### Bug fixes
 - Configuration parser was changed to *raw* method, which relaxes the requirement to quote option values containing special characters in `config.ini`. ([#1371](https://github.com/fossar/selfoss/issues/1371))
@@ -40,6 +41,9 @@
 - Source filters are stricter, they need to start and end with a `/`. ([#1423](https://github.com/fossar/selfoss/pull/1423))
 - OPML importer has been merged into the React client. ([#1442](https://github.com/fossar/selfoss/pull/1442))
 - Web requests will send `Accept-Encoding` header. ([#1482](https://github.com/fossar/selfoss/pull/1482))
+- Authentication system has been rewritten to allow more methods in the future. ([#1491](https://github.com/fossar/selfoss/pull/1491))
+- Authentication will now also log user out when the credentials in the config change. ([#1491](https://github.com/fossar/selfoss/pull/1491))
+- Requests from loopback IP address now give full access to all operations, not just update. Additionally, IPv6 loopback address is recognized and proxies are ignored. ([#1491](https://github.com/fossar/selfoss/pull/1491))
 
 #### For developers
 - Back-end source code is now checked using [PHPStan](https://phpstan.org/). ([#1409](https://github.com/fossar/selfoss/pull/1409))
