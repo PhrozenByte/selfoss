@@ -4,9 +4,10 @@ import React, {
     useEffect,
     useMemo,
     useState,
+    forwardRef,
 } from 'react';
 import PropTypes from 'prop-types';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router';
 import { useOnline } from 'rooks';
 import { useStateWithDeps } from 'use-state-with-deps';
 import nullable from 'prop-types-nullable';
@@ -27,10 +28,12 @@ import { LocalizationContext } from '../helpers/i18n';
 import { useShouldReload } from '../helpers/hooks';
 import { forceReload, makeEntriesLinkLocation } from '../helpers/uri';
 import { HttpError } from '../errors';
+import { useNavigate } from 'react-router';
 
 function reloadList({
     fetchParams,
     abortController,
+    navigate,
     append = false,
     waitForSync = true,
     configuration,
@@ -134,7 +137,7 @@ function reloadList({
                     error instanceof HttpError &&
                     error.response.status === 403
                 ) {
-                    selfoss.history.push('/sign/in', {
+                    navigate('/sign/in', {
                         error: selfoss.app._('error_session_expired'),
                     });
                     return;
@@ -228,6 +231,7 @@ export function EntriesPage({
     const configuration = useContext(ConfigurationContext);
 
     const location = useLocation();
+    const navigate = useNavigate();
     const forceReload = useShouldReload();
     const searchText = useMemo(() => {
         const queryString = new URLSearchParams(location.search);
@@ -294,6 +298,7 @@ export function EntriesPage({
                 fromId,
             },
             abortController,
+            navigate,
             append,
             configuration,
             // We do not want to focus the entry on successive loads.
@@ -320,6 +325,8 @@ export function EntriesPage({
             abortController.abort();
         };
     }, [
+        // navigate is intentionally omitted
+        // to prevent reloading when path is replaced
         configuration,
         params.filter,
         currentTag,
@@ -430,7 +437,7 @@ export function EntriesPage({
     }
 
     return (
-        <React.Fragment>
+        <>
             {currentSource !== null && allowedToUpdate && isOnline ? (
                 <button
                     type="button"
@@ -509,7 +516,7 @@ export function EntriesPage({
                     </button>
                 ) : null}
             </div>
-        </React.Fragment>
+        </>
     );
 }
 
@@ -540,7 +547,7 @@ const initialState = {
     loadingState: LoadingState.INITIAL,
 };
 
-export default class StateHolder extends React.Component {
+class StateHolder extends React.Component {
     constructor(props) {
         super(props);
         this.state = initialState;
@@ -720,14 +727,10 @@ export default class StateHolder extends React.Component {
     refreshEntryStatuses(entryStatuses) {
         this.state.entries.forEach((entry) => {
             const { id } = entry;
-            let newStatus = false;
-            entryStatuses.some((entryStatus) => {
-                if (entryStatus.id == id) {
-                    newStatus = entryStatus;
-                }
-                return newStatus;
-            });
-            if (newStatus) {
+            const newStatus = entryStatuses.find(
+                (entryStatus) => entryStatus.id == id,
+            );
+            if (newStatus !== null) {
                 this.starEntryInView(id, newStatus.starred);
                 this.markEntryInView(id, newStatus.unread);
             }
@@ -755,30 +758,27 @@ export default class StateHolder extends React.Component {
     }
 
     getActiveTag() {
-        if (!this.props.match) {
+        const category = this.props.params?.category;
+        if (!category) {
             return null;
         }
-        const { params } = this.props.match;
-        return params.category?.startsWith('tag-')
-            ? params.category.replace(/^tag-/, '')
+        return category.startsWith('tag-')
+            ? category.replace(/^tag-/, '')
             : null;
     }
 
     getActiveSource() {
-        if (!this.props.match) {
+        const category = this.props.params?.category;
+        if (!category) {
             return null;
         }
-        const { params } = this.props.match;
-        return params.category?.startsWith('source-')
-            ? parseInt(params.category.replace(/^source-/, ''), 10)
+        return category.startsWith('source-')
+            ? parseInt(category.replace(/^source-/, ''), 10)
             : null;
     }
 
     getActiveFilter() {
-        if (!this.props.match) {
-            return null;
-        }
-        return this.props.match.params.filter;
+        return this.props.params?.filter;
     }
 
     /**
@@ -823,11 +823,8 @@ export default class StateHolder extends React.Component {
         this.setExpandedEntries({});
         this.props.setNavExpanded(false);
 
-        if (
-            ids.length !== 0 &&
-            this.props.match.params.filter === FilterType.UNREAD
-        ) {
-            markedEntries = markedEntries.filter(({ id }) => !ids.includes(id));
+        if (this.props.params.filter === FilterType.UNREAD) {
+            markedEntries = [];
         }
 
         this.setLoadingState(LoadingState.LOADING);
@@ -891,8 +888,12 @@ export default class StateHolder extends React.Component {
                             error instanceof HttpError &&
                             error.response.status === 403
                         ) {
-                            selfoss.history.push('/sign/in', {
-                                error: selfoss.app._('error_session_expired'),
+                            this.props.navigate('/sign/in', {
+                                state: {
+                                    error: selfoss.app._(
+                                        'error_session_expired',
+                                    ),
+                                },
                             });
                             return;
                         }
@@ -972,8 +973,12 @@ export default class StateHolder extends React.Component {
                             error instanceof HttpError &&
                             error.response.status === 403
                         ) {
-                            selfoss.history.push('/sign/in', {
-                                error: selfoss.app._('error_session_expired'),
+                            this.props.navigate('/sign/in', {
+                                state: {
+                                    error: selfoss.app._(
+                                        'error_session_expired',
+                                    ),
+                                },
                             });
                             return;
                         }
@@ -1041,8 +1046,12 @@ export default class StateHolder extends React.Component {
                             error instanceof HttpError &&
                             error.response.status === 403
                         ) {
-                            selfoss.history.push('/sign/in', {
-                                error: selfoss.app._('error_session_expired'),
+                            this.props.navigate('/sign/in', {
+                                state: {
+                                    error: selfoss.app._(
+                                        'error_session_expired',
+                                    ),
+                                },
                             });
                             return;
                         }
@@ -1063,11 +1072,13 @@ export default class StateHolder extends React.Component {
         /**
          * HACK: A counter that is increased every time reload action (r key) is triggered.
          */
-        selfoss.history.replace({
-            ...this.props.location,
-            ...makeEntriesLinkLocation(this.props.location, { id: null }),
-            state: forceReload(this.props.location),
-        });
+        this.props.navigate(
+            makeEntriesLinkLocation(this.props.location, { id: null }),
+            {
+                replace: true,
+                state: forceReload(this.props.location),
+            },
+        );
     }
 
     /**
@@ -1233,9 +1244,49 @@ export default class StateHolder extends React.Component {
 StateHolder.propTypes = {
     configuration: PropTypes.object.isRequired,
     location: PropTypes.object.isRequired,
-    match: PropTypes.object.isRequired,
+    navigate: PropTypes.func.isRequired,
+    params: PropTypes.object.isRequired,
     setNavExpanded: PropTypes.func.isRequired,
     navSourcesExpanded: PropTypes.bool.isRequired,
     setGlobalUnreadCount: PropTypes.func.isRequired,
     unreadItemsCount: PropTypes.number.isRequired,
 };
+
+const StateHolderOuter = forwardRef(function StateHolderOuter(
+    {
+        configuration,
+        setNavExpanded,
+        navSourcesExpanded,
+        setGlobalUnreadCount,
+        unreadItemsCount,
+    },
+    ref,
+) {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const params = useParams();
+
+    return (
+        <StateHolder
+            ref={ref}
+            location={location}
+            navigate={navigate}
+            params={params}
+            configuration={configuration}
+            setNavExpanded={setNavExpanded}
+            navSourcesExpanded={navSourcesExpanded}
+            setGlobalUnreadCount={setGlobalUnreadCount}
+            unreadItemsCount={unreadItemsCount}
+        />
+    );
+});
+
+StateHolderOuter.propTypes = {
+    configuration: PropTypes.object.isRequired,
+    setNavExpanded: PropTypes.func.isRequired,
+    navSourcesExpanded: PropTypes.bool.isRequired,
+    setGlobalUnreadCount: PropTypes.func.isRequired,
+    unreadItemsCount: PropTypes.number.isRequired,
+};
+
+export default StateHolderOuter;

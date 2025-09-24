@@ -3,6 +3,8 @@ import { OfflineStorageNotAvailableError } from './errors';
 import Dexie from 'dexie';
 import { FilterType } from './Filter';
 
+const ENTRY_STATUS_NAMES = ['unread', 'starred'];
+
 selfoss.dbOffline = {
     /** @var Date the datetime of the newest garbage collected entry, i.e. deleted because not of interest. */
     newestGCedEntry: null,
@@ -58,8 +60,7 @@ selfoss.dbOffline = {
         return selfoss.dbOffline
             ._tr(
                 'r',
-                selfoss.db.storage.entries,
-                selfoss.db.storage.stamps,
+                [selfoss.db.storage.entries, selfoss.db.storage.stamps],
                 () => {
                     selfoss.dbOffline._memLastItemId();
                     selfoss.db.storage.stamps.get(
@@ -161,8 +162,7 @@ selfoss.dbOffline = {
     storeEntries(entries) {
         return selfoss.dbOffline._tr(
             'rw',
-            selfoss.db.storage.entries,
-            selfoss.db.storage.stamps,
+            [selfoss.db.storage.entries, selfoss.db.storage.stamps],
             () => {
                 selfoss.dbOffline.GCEntries();
 
@@ -253,7 +253,7 @@ selfoss.dbOffline = {
     },
 
     storeStats(stats) {
-        return selfoss.dbOffline._tr('rw', selfoss.db.storage.stats, () => {
+        return selfoss.dbOffline._tr('rw', [selfoss.db.storage.stats], () => {
             for (const [name, value] of Object.entries(stats)) {
                 selfoss.db.storage.stats.put({
                     name,
@@ -264,7 +264,7 @@ selfoss.dbOffline = {
     },
 
     storeLastUpdate(lastUpdate) {
-        return selfoss.dbOffline._tr('rw', selfoss.db.storage.stamps, () => {
+        return selfoss.dbOffline._tr('rw', [selfoss.db.storage.stamps], () => {
             if (lastUpdate) {
                 selfoss.db.storage.stamps.put({
                     name: 'lastItemsUpdate',
@@ -277,7 +277,7 @@ selfoss.dbOffline = {
     getEntries(fetchParams) {
         let hasMore = false;
         return selfoss.dbOffline
-            ._tr('r', selfoss.db.storage.entries, () => {
+            ._tr('r', [selfoss.db.storage.entries], () => {
                 let howMany = 0;
 
                 const ascOrder =
@@ -361,7 +361,7 @@ selfoss.dbOffline = {
     },
 
     reloadOnlineStats() {
-        return selfoss.dbOffline._tr('r', selfoss.db.storage.stats, () => {
+        return selfoss.dbOffline._tr('r', [selfoss.db.storage.stats], () => {
             selfoss.db.storage.stats.toArray((stats) => {
                 const newStats = {};
                 stats.forEach((stat) => {
@@ -377,7 +377,7 @@ selfoss.dbOffline = {
     },
 
     refreshStats() {
-        return selfoss.dbOffline._tr('r', selfoss.db.storage.entries, () => {
+        return selfoss.dbOffline._tr('r', [selfoss.db.storage.entries], () => {
             const offlineCounts = { newest: 0, unread: 0, starred: 0 };
 
             // IDBKeyRange does not support boolean indexes, so we need to
@@ -411,7 +411,7 @@ selfoss.dbOffline = {
             datetime: d,
         }));
 
-        return selfoss.dbOffline._tr('rw', selfoss.db.storage.statusq, () => {
+        return selfoss.dbOffline._tr('rw', [selfoss.db.storage.statusq], () => {
             selfoss.db.storage.statusq.bulkAdd(newQueuedStatuses);
         });
     },
@@ -419,7 +419,7 @@ selfoss.dbOffline = {
     enqueueStatus(entryId, statusName, statusValue) {
         return selfoss.dbOffline.enqueueStatuses([
             {
-                entryId: entryId,
+                entryId,
                 name: statusName,
                 value: statusValue,
             },
@@ -454,9 +454,11 @@ selfoss.dbOffline = {
         return selfoss.dbOffline
             ._tr(
                 'rw',
-                selfoss.db.storage.entries,
-                selfoss.db.storage.stats,
-                selfoss.db.storage.statusq,
+                [
+                    selfoss.db.storage.entries,
+                    selfoss.db.storage.stats,
+                    selfoss.db.storage.statusq,
+                ],
                 () => {
                     const statsDiff = {};
 
@@ -464,7 +466,7 @@ selfoss.dbOffline = {
                     itemStatuses.forEach((itemStatus) => {
                         const newStatus = {};
 
-                        selfoss.db.entryStatusNames.forEach((statusName) => {
+                        ENTRY_STATUS_NAMES.forEach((statusName) => {
                             if (statusName in itemStatus) {
                                 statsDiff[statusName] = 0;
                                 newStatus[statusName] = itemStatus[statusName];
@@ -521,7 +523,7 @@ selfoss.dbOffline = {
     entriesMark(itemIds, unread) {
         selfoss.dbOnline.statsDirty = true;
         const newStatuses = itemIds.map((itemId) => {
-            return { id: itemId, unread: unread };
+            return { id: itemId, unread };
         });
         return selfoss.dbOffline.storeEntryStatuses(newStatuses);
     },
@@ -534,7 +536,7 @@ selfoss.dbOffline = {
         return selfoss.dbOffline.storeEntryStatuses([
             {
                 id: itemId,
-                starred: starred,
+                starred,
             },
         ]);
     },

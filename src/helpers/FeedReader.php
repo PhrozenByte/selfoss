@@ -30,7 +30,7 @@ class FeedReader {
             WebClient::class => $webClient,
         ]);
 
-        $this->simplepie->set_file_class(SimplePieFileGuzzle::class);
+        $this->simplepie->get_registry()->register(\SimplePie\File::class, SimplePieFileGuzzle::class, true);
         $this->simplepie->set_autodiscovery_level(SimplePie::LOCATOR_AUTODISCOVERY | SimplePie::LOCATOR_LOCAL_EXTENSION | SimplePie::LOCATOR_LOCAL_BODY);
         $this->simplepie->set_useragent($webClient->getUserAgent());
     }
@@ -48,6 +48,7 @@ class FeedReader {
         @$this->simplepie->init();
 
         // on error retry with force_feed
+        // @phpstan-ignore-next-line notIdentical.alwaysTrue (The upstream type is incorrect: https://github.com/simplepie/simplepie/pull/903)
         if ($this->simplepie->error() !== null) {
             @$this->simplepie->set_autodiscovery_level(SimplePie::LOCATOR_NONE);
             @$this->simplepie->force_feed(true);

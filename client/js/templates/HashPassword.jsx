@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useInput } from 'rooks';
 import { LoadingState } from '../requests/LoadingState';
 import { HttpError } from '../errors';
@@ -12,7 +12,7 @@ export default function HashPassword({ setTitle }) {
     const [error, setError] = useState(null);
     const passwordEntry = useInput('');
 
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const submit = useCallback(
         (event) => {
@@ -29,17 +29,17 @@ export default function HashPassword({ setTitle }) {
                         error instanceof HttpError &&
                         error.response.status === 403
                     ) {
-                        history.push('/sign/in', {
+                        navigate('/sign/in', {
                             error: 'Generating a new password hash requires being logged in or not setting “password” in selfoss configuration.',
                             returnLocation: '/password',
                         });
                         return;
                     }
                     setError(error);
-                    setState(LoadingState.ERROR);
+                    setState(LoadingState.FAILURE);
                 });
         },
-        [history, passwordEntry.value],
+        [navigate, passwordEntry.value],
     );
 
     useEffect(() => {
@@ -58,7 +58,7 @@ export default function HashPassword({ setTitle }) {
                     <input type="text" value={hashedPassword} readOnly />
                 </label>
             </p>
-        ) : state === LoadingState.ERROR ? (
+        ) : state === LoadingState.FAILURE ? (
             <p className="error">
                 Unexpected happened.
                 <details>

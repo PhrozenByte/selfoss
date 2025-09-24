@@ -3,13 +3,13 @@ import PropTypes from 'prop-types';
 import nullable from 'prop-types-nullable';
 import {
     BrowserRouter as Router,
-    Switch,
+    Routes,
     Route,
     Link,
-    Redirect,
-    useHistory,
+    Navigate,
+    useNavigate,
     useLocation,
-} from 'react-router-dom';
+} from 'react-router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Collapse } from '@kunukn/react-collapse';
 import classNames from 'classnames';
@@ -25,11 +25,11 @@ import * as icons from '../icons';
 import { useAllowedToRead, useAllowedToWrite } from '../helpers/authorizations';
 import { ConfigurationContext } from '../helpers/configuration';
 import { useIsSmartphone, useListenableValue } from '../helpers/hooks';
-import { ENTRIES_ROUTE_PATTERN } from '../helpers/uri';
 import { i18nFormat, LocalizationContext } from '../helpers/i18n';
 import { LoadingState } from '../requests/LoadingState';
 import * as sourceRequests from '../requests/sources';
 import locales from '../locales';
+import { useEntriesParams } from '../helpers/uri';
 
 function handleNavToggle({ event, setNavExpanded }) {
     event.preventDefault();
@@ -91,12 +91,12 @@ function NotFound() {
 }
 
 function CheckAuthorization({ isAllowed, returnLocation, _, children }) {
-    const history = useHistory();
+    const navigate = useNavigate();
     if (!isAllowed) {
         const [preLink, inLink, postLink] = _('error_unauthorized').split(
             /\{(?:link_begin|link_end)\}/,
         );
-        history.push('/sign/in', {
+        navigate('/sign/in', {
             returnLocation,
         });
 
@@ -153,10 +153,10 @@ function PureApp({
     }, []);
 
     // TODO: move stuff that depends on this to the App.
-    const history = useHistory();
+    const navigate = useNavigate();
     useEffect(() => {
-        selfoss.history = history;
-    }, [history]);
+        selfoss.navigate = navigate;
+    }, [navigate]);
 
     // Prepare path of the homepage for redirecting from /
     const homePagePath = configuration.homepage.split('/');
@@ -191,155 +191,177 @@ function PureApp({
         <React.StrictMode>
             <Message message={globalMessage} />
 
-            <Switch>
-                <Route path="/sign/in">
-                    {/* menu open for smartphone */}
-                    <div id="loginform" role="main">
-                        <LoginForm {...{ offlineEnabled }} />
-                    </div>
-                </Route>
-
-                <Route path="/password">
-                    <CheckAuthorization
-                        isAllowed={isAllowedToWrite}
-                        returnLocation="/password"
-                        _={_}
-                    >
-                        <div id="hashpasswordbody" role="main">
-                            <HashPassword setTitle={setTitle} />
+            <Routes>
+                <Route
+                    path="/sign/in"
+                    element={
+                        /* menu open for smartphone */
+                        <div id="loginform" role="main">
+                            <LoginForm {...{ offlineEnabled }} />
                         </div>
-                    </CheckAuthorization>
-                </Route>
+                    }
+                />
 
-                <Route path="/opml">
-                    <CheckAuthorization
-                        isAllowed={selfoss.isAllowedToWrite()}
-                        returnLocation="/opml"
-                        _={_}
-                    >
-                        <main id="opmlbody">
-                            <OpmlImport setTitle={setTitle} />
-                        </main>
-                    </CheckAuthorization>
-                </Route>
+                <Route
+                    path="/password"
+                    element={
+                        <CheckAuthorization
+                            isAllowed={isAllowedToWrite}
+                            returnLocation="/password"
+                            _={_}
+                        >
+                            <div id="hashpasswordbody" role="main">
+                                <HashPassword setTitle={setTitle} />
+                            </div>
+                        </CheckAuthorization>
+                    }
+                />
 
-                <Route path="/">
-                    <CheckAuthorization isAllowed={isAllowedToRead} _={_}>
-                        <div id="nav-mobile" role="navigation">
-                            <div id="nav-mobile-logo">
-                                <div
-                                    id="nav-mobile-count"
-                                    className={classNames({
-                                        'unread-count': true,
-                                        offline: offlineState,
-                                        online: !offlineState,
-                                        unread: unreadItemsCount > 0,
-                                    })}
-                                >
-                                    <span
+                <Route
+                    path="/opml"
+                    element={
+                        <CheckAuthorization
+                            isAllowed={isAllowedToWrite}
+                            returnLocation="/opml"
+                            _={_}
+                        >
+                            <main id="opmlbody">
+                                <OpmlImport setTitle={setTitle} />
+                            </main>
+                        </CheckAuthorization>
+                    }
+                />
+
+                <Route
+                    path="*"
+                    element={
+                        <CheckAuthorization isAllowed={isAllowedToRead} _={_}>
+                            <div id="nav-mobile" role="navigation">
+                                <div id="nav-mobile-logo">
+                                    <div
+                                        id="nav-mobile-count"
                                         className={classNames({
-                                            'offline-count': true,
+                                            'unread-count': true,
                                             offline: offlineState,
                                             online: !offlineState,
-                                            diff:
-                                                unreadItemsCount !==
-                                                    unreadItemsOfflineCount &&
-                                                unreadItemsOfflineCount,
+                                            unread: unreadItemsCount > 0,
                                         })}
                                     >
-                                        {unreadItemsOfflineCount > 0
-                                            ? unreadItemsOfflineCount
-                                            : ''}
-                                    </span>
-                                    <span className="count">
-                                        {unreadItemsCount}
-                                    </span>
+                                        <span
+                                            className={classNames({
+                                                'offline-count': true,
+                                                offline: offlineState,
+                                                online: !offlineState,
+                                                diff:
+                                                    unreadItemsCount !==
+                                                        unreadItemsOfflineCount &&
+                                                    unreadItemsOfflineCount,
+                                            })}
+                                        >
+                                            {unreadItemsOfflineCount > 0
+                                                ? unreadItemsOfflineCount
+                                                : ''}
+                                        </span>
+                                        <span className="count">
+                                            {unreadItemsCount}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
-                            <button
-                                id="nav-mobile-settings"
-                                accessKey="t"
-                                aria-label={_('settingsbutton')}
-                                onClick={menuButtonOnClick}
-                            >
-                                <FontAwesomeIcon icon={icons.menu} size="2x" />
-                            </button>
-                        </div>
-
-                        {/* navigation */}
-                        <Collapse
-                            isOpen={!smartphone || navExpanded}
-                            className="collapse-css-transition"
-                        >
-                            <div id="nav" role="navigation">
-                                <Navigation
-                                    entriesPage={entriesPage}
-                                    setNavExpanded={setNavExpanded}
-                                    navSourcesExpanded={navSourcesExpanded}
-                                    setNavSourcesExpanded={
-                                        setNavSourcesExpanded
-                                    }
-                                    offlineState={offlineState}
-                                    allItemsCount={allItemsCount}
-                                    allItemsOfflineCount={allItemsOfflineCount}
-                                    unreadItemsCount={unreadItemsCount}
-                                    unreadItemsOfflineCount={
-                                        unreadItemsOfflineCount
-                                    }
-                                    starredItemsCount={starredItemsCount}
-                                    starredItemsOfflineCount={
-                                        starredItemsOfflineCount
-                                    }
-                                    sourcesState={sourcesState}
-                                    setSourcesState={setSourcesState}
-                                    sources={sources}
-                                    setSources={setSources}
-                                    tags={tags}
-                                    reloadAll={reloadAll}
-                                />
-                            </div>
-                        </Collapse>
-
-                        <ul id="search-list">
-                            <SearchList />
-                        </ul>
-
-                        {/* content */}
-                        <div id="content" role="main">
-                            <Switch>
-                                <Route exact path="/">
-                                    <Redirect
-                                        to={`/${homePagePath.join('/')}`}
+                                <button
+                                    id="nav-mobile-settings"
+                                    accessKey="t"
+                                    aria-label={_('settingsbutton')}
+                                    onClick={menuButtonOnClick}
+                                >
+                                    <FontAwesomeIcon
+                                        icon={icons.menu}
+                                        size="2x"
                                     />
-                                </Route>
-                                <Route path={ENTRIES_ROUTE_PATTERN}>
-                                    {(routeProps) => (
-                                        <EntriesPage
-                                            {...routeProps}
-                                            ref={entriesRef}
-                                            setNavExpanded={setNavExpanded}
-                                            configuration={configuration}
-                                            navSourcesExpanded={
-                                                navSourcesExpanded
-                                            }
-                                            unreadItemsCount={unreadItemsCount}
-                                            setGlobalUnreadCount={
-                                                setGlobalUnreadCount
-                                            }
-                                        />
-                                    )}
-                                </Route>
-                                <Route path="/manage/sources">
-                                    <SourcesPage />
-                                </Route>
-                                <Route path="*">
-                                    <NotFound />
-                                </Route>
-                            </Switch>
-                        </div>
-                    </CheckAuthorization>
-                </Route>
-            </Switch>
+                                </button>
+                            </div>
+
+                            {/* navigation */}
+                            <Collapse
+                                isOpen={!smartphone || navExpanded}
+                                className="collapse-css-transition"
+                            >
+                                <div id="nav" role="navigation">
+                                    <Navigation
+                                        entriesPage={entriesPage}
+                                        setNavExpanded={setNavExpanded}
+                                        navSourcesExpanded={navSourcesExpanded}
+                                        setNavSourcesExpanded={
+                                            setNavSourcesExpanded
+                                        }
+                                        offlineState={offlineState}
+                                        allItemsCount={allItemsCount}
+                                        allItemsOfflineCount={
+                                            allItemsOfflineCount
+                                        }
+                                        unreadItemsCount={unreadItemsCount}
+                                        unreadItemsOfflineCount={
+                                            unreadItemsOfflineCount
+                                        }
+                                        starredItemsCount={starredItemsCount}
+                                        starredItemsOfflineCount={
+                                            starredItemsOfflineCount
+                                        }
+                                        sourcesState={sourcesState}
+                                        setSourcesState={setSourcesState}
+                                        sources={sources}
+                                        setSources={setSources}
+                                        tags={tags}
+                                        reloadAll={reloadAll}
+                                    />
+                                </div>
+                            </Collapse>
+
+                            <ul id="search-list">
+                                <SearchList />
+                            </ul>
+
+                            {/* content */}
+                            <div id="content" role="main">
+                                <Routes>
+                                    <Route
+                                        path="/"
+                                        element={
+                                            <Navigate
+                                                to={`/${homePagePath.join('/')}`}
+                                                replace
+                                            />
+                                        }
+                                    />
+                                    <Route
+                                        path="/:filter/:category/:id?"
+                                        element={
+                                            <EntriesFilter
+                                                entriesRef={entriesRef}
+                                                setNavExpanded={setNavExpanded}
+                                                configuration={configuration}
+                                                navSourcesExpanded={
+                                                    navSourcesExpanded
+                                                }
+                                                unreadItemsCount={
+                                                    unreadItemsCount
+                                                }
+                                                setGlobalUnreadCount={
+                                                    setGlobalUnreadCount
+                                                }
+                                            />
+                                        }
+                                    />
+                                    <Route
+                                        path="/manage/sources/add?"
+                                        element={<SourcesPage />}
+                                    />
+                                    <Route path="*" element={<NotFound />} />
+                                </Routes>
+                            </div>
+                        </CheckAuthorization>
+                    }
+                />
+            </Routes>
         </React.StrictMode>
     );
 }
@@ -363,7 +385,44 @@ PureApp.propTypes = {
     reloadAll: PropTypes.func.isRequired,
 };
 
-export default class App extends React.Component {
+// Work around for regex patterns not being supported
+// https://github.com/remix-run/react-router/issues/8254
+function EntriesFilter({
+    entriesRef,
+    setNavExpanded,
+    configuration,
+    navSourcesExpanded,
+    unreadItemsCount,
+    setGlobalUnreadCount,
+}) {
+    const params = useEntriesParams();
+
+    if (params === null) {
+        return <NotFound />;
+    }
+
+    return (
+        <EntriesPage
+            ref={entriesRef}
+            setNavExpanded={setNavExpanded}
+            configuration={configuration}
+            navSourcesExpanded={navSourcesExpanded}
+            unreadItemsCount={unreadItemsCount}
+            setGlobalUnreadCount={setGlobalUnreadCount}
+        />
+    );
+}
+
+EntriesFilter.propTypes = {
+    entriesRef: PropTypes.func.isRequired,
+    configuration: PropTypes.object.isRequired,
+    setNavExpanded: PropTypes.func.isRequired,
+    navSourcesExpanded: PropTypes.bool.isRequired,
+    setGlobalUnreadCount: PropTypes.func.isRequired,
+    unreadItemsCount: PropTypes.number.isRequired,
+};
+
+export class App extends React.Component {
     constructor(props) {
         super(props);
         this.state = {

@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useRef } from 'react';
 import { Menu, MenuButton, MenuItem } from '@szhsin/react-menu';
-import { useHistory, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router';
 import { fadeOut } from '@siteparts/show-hide-effects';
 import { makeEntriesLinkLocation } from '../helpers/uri';
 import PropTypes from 'prop-types';
@@ -217,7 +217,7 @@ function handleSpoutChange({
             const defaults = Object.fromEntries(
                 Object.entries(spout.params).map(([param, props]) => [
                     param,
-                    props['default'] ?? '',
+                    props.default ?? '',
                 ]),
             );
             updateEditedSource((source) => {
@@ -375,7 +375,7 @@ function SourceEditForm({
     const sourceParamsContent = sourceParamsLoading ? (
         <Spinner size="3x" label={_('source_params_loading')} />
     ) : (
-        sourceParamsError ??
+        (sourceParamsError ??
         (Object.keys(spouts).includes(source.spout) &&
         Object.keys(spouts[source.spout].params).length > 0 ? (
             <ul>
@@ -396,7 +396,7 @@ function SourceEditForm({
                     ),
                 )}
             </ul>
-        ) : null)
+        ) : null))
     );
 
     return (
@@ -417,8 +417,8 @@ function SourceEditForm({
                         onChange={titleOnChange}
                         autoFocus
                     />
-                    {sourceErrors['title'] ? (
-                        <span className="error">{sourceErrors['title']}</span>
+                    {sourceErrors.title ? (
+                        <span className="error">{sourceErrors.title}</span>
                     ) : null}
                 </li>
 
@@ -439,8 +439,8 @@ function SourceEditForm({
                         {' '}
                         {_('source_comma')}
                     </span>
-                    {sourceErrors['tags'] ? (
-                        <span className="error">{sourceErrors['tags']}</span>
+                    {sourceErrors.tags ? (
+                        <span className="error">{sourceErrors.tags}</span>
                     ) : null}
                 </li>
 
@@ -457,8 +457,8 @@ function SourceEditForm({
                         value={source.filter ?? ''}
                         onChange={filterOnChange}
                     />
-                    {sourceErrors['filter'] ? (
-                        <span className="error">{sourceErrors['filter']}</span>
+                    {sourceErrors.filter ? (
+                        <span className="error">{sourceErrors.filter}</span>
                     ) : null}
                 </li>
 
@@ -486,8 +486,8 @@ function SourceEditForm({
                             </option>
                         ))}
                     </select>
-                    {sourceErrors['spout'] ? (
-                        <span className="error">{sourceErrors['spout']}</span>
+                    {sourceErrors.spout ? (
+                        <span className="error">{sourceErrors.spout}</span>
                     ) : null}
                 </li>
 
@@ -514,10 +514,10 @@ function SourceEditForm({
                         {_('source_save')}
 
                         {sourceActionLoading && (
-                            <React.Fragment>
+                            <>
                                 {' '}
                                 <Spinner label={_('source_saving')} />
-                            </React.Fragment>
+                            </>
                         )}
                     </button>
                     {' • '}
@@ -606,7 +606,7 @@ export default function Source({
         [source.id, setDirtySources],
     );
 
-    const history = useHistory();
+    const navigate = useNavigate();
     const location = useLocation();
 
     const sourceElem = useRef(null);
@@ -622,14 +622,14 @@ export default function Source({
                     setDirty,
                 });
             } else if (value === 'browse') {
-                history.push(
+                navigate(
                     makeEntriesLinkLocation(location, {
                         category: `source-${source.id}`,
                     }),
                 );
             }
         },
-        [source, sourceElem, setSources, setDirty, location, history],
+        [source, sourceElem, setSources, setDirty, location, navigate],
     );
 
     const _ = useContext(LocalizationContext);
@@ -655,7 +655,7 @@ export default function Source({
             </h2>{' '}
             <div className="source-edit-delete">
                 {!editedSource && (
-                    <React.Fragment>
+                    <>
                         <button
                             type="button"
                             accessKey="e"
@@ -673,7 +673,7 @@ export default function Source({
                             )}
                         </button>
                         {' • '}
-                    </React.Fragment>
+                    </>
                 )}
                 <Menu
                     onItemClick={extraMenuOnSelection}
@@ -681,10 +681,10 @@ export default function Source({
                         <MenuButton className="source-menu-button">
                             {_('source_menu')}
                             {sourceBeingDeleted && (
-                                <React.Fragment>
+                                <>
                                     {' '}
                                     <Spinner label={_('source_deleting')} />
-                                </React.Fragment>
+                                </>
                             )}
                         </MenuButton>
                     }
