@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use GuzzleHttp\Psr7\Uri;
 use Monolog\Logger;
@@ -19,15 +19,13 @@ use Monolog\Logger;
  *
  * This must be the only place to call `session_start()`.
  */
-class Session {
+final class Session {
     private bool $started = false;
 
-    private Logger $logger;
-    private View $view;
-
-    public function __construct(Logger $logger, View $view) {
-        $this->logger = $logger;
-        $this->view = $view;
+    public function __construct(
+        private readonly Logger $logger,
+        private readonly View $view
+    ) {
     }
 
     public function start(): void {

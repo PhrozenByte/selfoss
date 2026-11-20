@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace controllers;
+namespace Selfoss\controllers;
 
-use helpers\Authentication;
-use helpers\Misc;
-use helpers\SpoutLoader;
-use helpers\View;
 use InvalidArgumentException;
+use Selfoss\daos;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\Misc;
+use Selfoss\helpers\SpoutLoader;
+use Selfoss\helpers\View;
 
 /**
  * Controller for sources handling
@@ -17,19 +18,14 @@ use InvalidArgumentException;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Sources {
-    private Authentication $authentication;
-    private \daos\Sources $sourcesDao;
-    private SpoutLoader $spoutLoader;
-    private \daos\Tags $tagsDao;
-    private View $view;
-
-    public function __construct(Authentication $authentication, \daos\Sources $sourcesDao, SpoutLoader $spoutLoader, \daos\Tags $tagsDao, View $view) {
-        $this->authentication = $authentication;
-        $this->sourcesDao = $sourcesDao;
-        $this->spoutLoader = $spoutLoader;
-        $this->tagsDao = $tagsDao;
-        $this->view = $view;
+final readonly class Sources {
+    public function __construct(
+        private Authentication $authentication,
+        private daos\Sources $sourcesDao,
+        private SpoutLoader $spoutLoader,
+        private daos\Tags $tagsDao,
+        private View $view
+    ) {
     }
 
     /**
@@ -57,20 +53,6 @@ class Sources {
     }
 
     /**
-     * add new source
-     * json
-     */
-    public function add(): void {
-        $this->authentication->ensureIsPrivileged();
-
-        $spouts = $this->spoutLoader->all();
-
-        $this->view->jsonSuccess([
-            'spouts' => $spouts,
-        ]);
-    }
-
-    /**
      * render spouts params
      * json
      */
@@ -88,7 +70,7 @@ class Sources {
             $this->view->error('invalid spout type given');
         }
 
-        $id = 'new-' . rand();
+        $id = 'new-' . random_int(0, mt_getrandmax());
         $this->view->jsonSuccess([
             'id' => $id,
             'spout' => $spout,
@@ -106,7 +88,7 @@ class Sources {
 
         try {
             $id = Misc::forceId($id);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             $this->view->error('invalid id given');
         }
 
@@ -134,7 +116,7 @@ class Sources {
         // get last icon
         foreach ($sources as &$source) {
             $source['params'] = json_decode(html_entity_decode($source['params']), true);
-            $source['error'] = $source['error'] ?? '';
+            $source['error'] ??= '';
         }
 
         $this->view->jsonSuccess($sources);
@@ -144,7 +126,7 @@ class Sources {
      * returns all available spouts
      * json
      */
-    public function spouts(): void {
+    public function spouts(): never {
         $this->authentication->ensureIsPrivileged();
 
         $spouts = $this->spoutLoader->all();
@@ -155,7 +137,7 @@ class Sources {
      * returns all sources with unread items
      * json
      */
-    public function stats(): void {
+    public function stats(): never {
         $this->authentication->ensureCanRead();
 
         // load sources

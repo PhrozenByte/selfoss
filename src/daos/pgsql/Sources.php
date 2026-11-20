@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace daos\pgsql;
+namespace Selfoss\daos\pgsql;
+
+use Override;
 
 /**
  * Class for accessing persistant saved sources -- postgresql
@@ -12,7 +14,22 @@ namespace daos\pgsql;
  * @author      Michael Jackson <michael.o.jackson@gmail.com>
  * @author      Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Sources extends \daos\mysql\Sources {
+final class Sources extends \Selfoss\daos\mysql\Sources {
     /** @var class-string SQL helper */
     protected static string $stmt = Statements::class;
+
+    /**
+     * wrap insert statement to return id
+     *
+     * @param string $query sql statement
+     * @param array<string, mixed> $params sql params
+     *
+     * @return int id after insert
+     */
+    #[Override]
+    protected function insert(string $query, array $params): int {
+        $res = $this->database->exec("$query RETURNING id", $params);
+
+        return $res[0]['id'];
+    }
 }

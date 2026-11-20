@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use Monolog\Logger;
 use PDO;
 use PDOException;
+use Selfoss\helpers\Database\PdoFactory;
 
 /**
  * Simple wrapper around PDO taken from F3.
@@ -14,33 +15,24 @@ use PDOException;
  * SPDX-License-Identifier: GPL-3.0-or-later
  * Copyright (c) 2009-2019 F3::Factory/Bong Cosca
  */
-class DatabaseConnection {
+final class DatabaseConnection {
     /** Whether a transaction is currently in progress */
     private bool $isInTransaction = false;
 
-    private PDO $pdo;
-
-    private Logger $logger;
-    private string $tableNamePrefix;
+    private readonly PDO $pdo;
 
     /**
      * Instantiate class
-     *
-     * @param ?array<string, mixed> $options
      */
     public function __construct(
-        Logger $logger,
+        private readonly Logger $logger,
         string $dsn,
-        ?string $user = null,
-        ?string $password = null,
-        ?array $options = null,
-        string $tableNamePrefix = ''
+        PdoFactory $pdoFactory,
+        private readonly string $tableNamePrefix = ''
     ) {
-        $this->logger = $logger;
         $this->logger->debug('Creating database connection', ['dsn' => $dsn]);
-        $this->pdo = new PDO($dsn, $user, $password, $options);
+        $this->pdo = $pdoFactory->create();
         $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $this->tableNamePrefix = $tableNamePrefix;
     }
 
     /**
@@ -86,21 +78,15 @@ class DatabaseConnection {
     /**
      * Map data type of argument to a PDO constant
      *
-     * @param scalar $val
+     * @param scalar|null $val
      */
     private function type($val): int {
-        switch (gettype($val)) {
-            case 'NULL':
-                return PDO::PARAM_NULL;
-            case 'boolean':
-                return PDO::PARAM_BOOL;
-            case 'integer':
-                return PDO::PARAM_INT;
-            case 'resource':
-                return PDO::PARAM_LOB;
-            default:
-                return PDO::PARAM_STR;
-        }
+        return match (gettype($val)) {
+            'NULL' => PDO::PARAM_NULL,
+            'boolean' => PDO::PARAM_BOOL,
+            'integer' => PDO::PARAM_INT,
+            default => PDO::PARAM_STR,
+        };
     }
 
     /**
@@ -162,8 +148,7 @@ class DatabaseConnection {
 
         $result = [];
         if ($statement->columnCount() !== 0) {
-            // Can return false on failure before PHP 8.0.0.
-            $result = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            $result = $statement->fetchAll(PDO::FETCH_ASSOC);
         }
 
         $statement->closeCursor();
@@ -174,24 +159,8 @@ class DatabaseConnection {
 
     /**
      * Quote string
-     *
-     * @param mixed $val
      */
-    public function quote($val, int $type = PDO::PARAM_STR): string {
+    public function quote(mixed $val, int $type = PDO::PARAM_STR): string {
         return $this->pdo->quote((string) $val, $type);
-    }
-
-    public function sqliteCreateFunction(
-        string $function_name,
-        callable $callback,
-        int $num_args = -1,
-        int $flags = 0
-    ): bool {
-        return $this->pdo->sqliteCreateFunction(
-            $function_name,
-            $callback,
-            $num_args,
-            $flags
-        );
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use Elphin\IcoFileLoader\IcoFileService;
 use GuzzleHttp\Psr7\Uri;
@@ -17,7 +17,7 @@ use WideImage\WideImage;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Image {
+final readonly class Image {
     public const FORMAT_JPEG = 'jpeg';
     public const FORMAT_PNG = 'png';
 
@@ -45,12 +45,10 @@ class Image {
         'application/ico' => 'ico',
     ];
 
-    private Logger $logger;
-    private WebClient $webClient;
-
-    public function __construct(Logger $logger, WebClient $webClient) {
-        $this->logger = $logger;
-        $this->webClient = $webClient;
+    public function __construct(
+        private Logger $logger,
+        private WebClient $webClient
+    ) {
     }
 
     /**
@@ -112,16 +110,16 @@ class Image {
                         return [$shortcutIconUrl, $image];
                     }
                 } catch (\Throwable $e) {
-                    $this->logger->error("failed to retrieve image $url,", ['exception' => $e]);
+                    $this->logger->error("failed to retrieve shortcut icon $url,", ['exception' => $e]);
                 }
             }
         }
 
-        $urlElements = parse_url($url);
+        $urlElements = new Uri($url);
 
         // search domain/favicon.ico
-        if (isset($urlElements['scheme']) && isset($urlElements['host'])) {
-            $url = $urlElements['scheme'] . '://' . $urlElements['host'] . '/favicon.ico';
+        if ($urlElements->getScheme() !== '' && $urlElements->getAuthority() !== '') {
+            $url = (string) $urlElements->withPath('/favicon.ico')->withFragment('')->withQuery('');
             try {
                 $data = $this->webClient->request($url);
                 $image = $this->loadImage($data, self::FORMAT_PNG, $width, $height);
@@ -130,7 +128,7 @@ class Image {
                     return [$url, $image];
                 }
             } catch (\Throwable $e) {
-                $this->logger->error("failed to retrieve image $url,", ['exception' => $e]);
+                $this->logger->error("failed to retrieve favicon $url,", ['exception' => $e]);
             }
         }
 
@@ -218,9 +216,7 @@ class Image {
                 $image = $icon->findBestForSize($width, $height);
             }
 
-            if ($image === null) {
-                $image = $icon->findBest();
-            }
+            $image ??= $icon->findBest();
 
             if ($image === null) {
                 return null;
@@ -237,7 +233,7 @@ class Image {
         // parse image for saving it later
         try {
             $wideImage = WideImage::load($data);
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             return null;
         }
 

@@ -2,25 +2,38 @@
 
 declare(strict_types=1);
 
-use helpers\Configuration;
-use helpers\DatabaseConnection;
+namespace Selfoss;
+
+use Bramus;
 use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\ErrorLogHandler;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Psr;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Client\ClientInterface;
 use Psr\SimpleCache\CacheInterface;
+use Selfoss\helpers\Configuration;
+use Selfoss\helpers\Configuration\LoggerLevel;
+use Selfoss\helpers\Database\PdoMysqlFactory;
+use Selfoss\helpers\Database\PdoPgsqlFactory;
+use Selfoss\helpers\Database\PdoSqliteFactory;
+use Selfoss\helpers\DatabaseConnection;
+use Selfoss\helpers\WebClient;
+use Slince;
 use Slince\Di\Container;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Psr16Cache;
+use Throwable;
+use Tracy;
+use Tracy\Debugger;
 
 require __DIR__ . '/constants.php';
 
-/**
- * @return never
- */
-function boot_error(string $message) {
+function boot_error(string $message): never {
+    // Logger is not available yet, so at least log to PHP’s error log.
+    error_log('selfoss boot error: ' . trim($message));
     http_response_code(500);
     header('Content-Type: text/plain');
     echo $message;
@@ -32,25 +45,35 @@ if ($autoloader === false) {
     boot_error('The PHP dependencies are missing. Did you run `composer install` in the selfoss directory?' . PHP_EOL);
 }
 
-$startup_error = error_get_last();
+// Catch any errors and hopefully log them.
+Debugger::$errorTemplate = __DIR__ . '/error.500.phtml';
+Debugger::setSessionStorage(new Tracy\NativeSession());
+Debugger::enable(Debugger::Production);
 
-// F3 crashes when there were PHP startups error even though
-// they might not affect the program (e.g. unable to load an extension).
-// It also sets its own error_reporting value and uses the previous one
-// as a signal to disable the initialization failure check.
-error_reporting(0);
+try {
+    $configDir = $_ENV['SELFOSS_CONFIG_DIR'] ?? null;
+    if ($configDir !== null && !is_dir($configDir)) {
+        boot_error('The value of SELFOSS_CONFIG_DIR environment variable (' . $configDir . ') must be a directory');
+    }
+    $configDir ??= (__DIR__ . '/..');
 
-$f3 = Base::instance();
+    $configPath = $_ENV['SELFOSS_CONFIG_PATH'] ?? null;
+    if ($configPath !== null && !is_file($configPath)) {
+        boot_error('The value of SELFOSS_CONFIG_PATH (' . $configPath . ') must be a file');
+    }
+    $configPath ??= $configDir . '/config.ini';
 
-error_reporting(E_ALL);
+    $configuration = new Configuration($configPath, $_ENV);
+} catch (Throwable $e) {
+    boot_error('Invalid configuration: ' . $e->getMessage() . PHP_EOL);
+}
 
-$f3->set('AUTOLOAD', false);
-$f3->set('BASEDIR', BASEDIR);
-
-$configuration = new Configuration(__DIR__ . '/../config.ini', $_ENV);
-
-$f3->set('DEBUG', $configuration->debug);
-$f3->set('cache', $configuration->cache);
+if ($configuration->debug !== 0) {
+    // Enable strict mode to loudly fail on any error or warning.
+    Debugger::$strictMode = true;
+    // Switch to development mode so that traces are displayed.
+    Debugger::enable(Debugger::Development);
+}
 
 $container = new Container();
 $container->setDefaults(['shared' => false]);
@@ -99,19 +122,19 @@ $container
 
 // Choose database implementation based on config
 $container
-    ->register(daos\DatabaseInterface::class, 'daos\\' . $configuration->dbType . '\\Database')
+    ->register(daos\DatabaseInterface::class, 'Selfoss\daos\\' . $configuration->dbType . '\\Database')
     ->setShared(true)
 ;
 $container
-    ->register(daos\ItemsInterface::class, 'daos\\' . $configuration->dbType . '\\Items')
+    ->register(daos\ItemsInterface::class, 'Selfoss\daos\\' . $configuration->dbType . '\\Items')
     ->setShared(true)
 ;
 $container
-    ->register(daos\SourcesInterface::class, 'daos\\' . $configuration->dbType . '\\Sources')
+    ->register(daos\SourcesInterface::class, 'Selfoss\daos\\' . $configuration->dbType . '\\Sources')
     ->setShared(true)
 ;
 $container
-    ->register(daos\TagsInterface::class, 'daos\\' . $configuration->dbType . '\\Tags')
+    ->register(daos\TagsInterface::class, 'Selfoss\daos\\' . $configuration->dbType . '\\Tags')
     ->setShared(true)
 ;
 
@@ -133,9 +156,7 @@ if ($configuration->dbType === 'sqlite') {
 
     // https://www.php.net/manual/en/ref.pdo-sqlite.connection.php
     $dsn = 'sqlite:' . $db_file;
-    $dbParams = [
-        'dsn' => $dsn,
-    ];
+    $pdoFactory = new PdoSqliteFactory($dsn);
 } elseif ($configuration->dbType === 'mysql') {
     if (!extension_loaded('pdo_mysql')) {
         boot_error('Using MySQL database requires pdo_mysql PHP extension. Please make sure you have it installed and enabled.');
@@ -154,13 +175,11 @@ if ($configuration->dbType === 'sqlite') {
         $dsn = "mysql:host=$host; dbname=$database";
     }
 
-    $dbParams = [
-        'dsn' => $dsn,
-        'user' => $configuration->dbUsername,
-        'password' => $configuration->dbPassword,
-        'options' => [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4;'],
-        'tableNamePrefix' => $configuration->dbPrefix,
-    ];
+    $pdoFactory = new PdoMysqlFactory(
+        dsn: $dsn,
+        user: $configuration->dbUsername,
+        password: $configuration->dbPassword,
+    );
 } elseif ($configuration->dbType === 'pgsql') {
     if (!extension_loaded('pdo_pgsql')) {
         boot_error('Using PostgreSQL database requires pdo_pgsql PHP extension. Please make sure you have it installed and enabled.');
@@ -177,36 +196,25 @@ if ($configuration->dbType === 'sqlite') {
         $dsn = "pgsql:host=$host; dbname=$database";
     }
 
-    $dbParams = [
-        'dsn' => $dsn,
-        'user' => $configuration->dbUsername,
-        'password' => $configuration->dbPassword,
-    ];
+    $pdoFactory = new PdoPgsqlFactory(
+        dsn: $dsn,
+        user: $configuration->dbUsername,
+        password: $configuration->dbPassword,
+    );
 } else {
-    throw new Exception('Unsupported value for db_type option: ' . $configuration->dbType);
+    boot_error('Unsupported value for db_type option: ' . $configuration->dbType . PHP_EOL);
 }
 
 $databaseConnection =
     $container
         ->register(DatabaseConnection::class)
-        ->setArguments($dbParams)
+        ->setArguments([
+            'pdoFactory' => $pdoFactory,
+            'dsn' => $dsn,
+            'tableNamePrefix' => $configuration->dbPrefix,
+        ])
         ->setShared(true)
 ;
-
-// Define regexp function for SQLite
-if ($configuration->dbType === 'sqlite') {
-    $databaseConnection->addMethodCall(
-        // https://www.sqlite.org/lang_expr.html#the_like_glob_regexp_match_and_extract_operators
-        'sqliteCreateFunction',
-        [
-            'regexp',
-            function(string $pattern, string $text): bool {
-                return preg_match('/' . addcslashes($pattern, '/') . '/', $text) === 1;
-            },
-            2,
-        ]
-    );
-}
 
 $container
     ->register('$iconStorageBackend', helpers\Storage\FileStorage::class)
@@ -253,6 +261,11 @@ $container
 ;
 
 $container
+    ->register(ClientInterface::class, WebClient::class)
+    ->setShared(true)
+;
+
+$container
     ->register(ContainerInterface::class, $container)
     ->setShared(true)
 ;
@@ -260,15 +273,15 @@ $container
 // init logger
 $log = $container->get(Logger::class);
 
-if ($configuration->loggerLevel === Configuration::LOGGER_LEVEL_NONE) {
+if ($configuration->loggerLevel === LoggerLevel::None) {
     $handler = new NullHandler();
 } else {
     $logger_destination = $configuration->loggerDestination;
 
     if (str_starts_with($logger_destination, 'file:')) {
-        $handler = new StreamHandler(substr($logger_destination, 5), $configuration->loggerLevel);
+        $handler = new StreamHandler(substr($logger_destination, 5), $configuration->loggerLevel->value);
     } elseif ($logger_destination === 'error_log') {
-        $handler = new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, $configuration->loggerLevel);
+        $handler = new ErrorLogHandler(ErrorLogHandler::OPERATING_SYSTEM, $configuration->loggerLevel->value);
     } else {
         boot_error('The `logger_destination` option needs to be either `error_log` or a file path prefixed by `file:`.' . PHP_EOL);
     }
@@ -279,43 +292,23 @@ if ($configuration->loggerLevel === Configuration::LOGGER_LEVEL_NONE) {
 }
 $log->pushHandler($handler);
 
-if (isset($startup_error)) {
-    $log->warning('PHP likely encountered a startup error: ', [$startup_error]);
-}
+$container
+    ->register(Psr\Log\LoggerInterface::class, $log)
+    ->setShared(true)
+;
 
-// init error handling
-$f3->set(
-    'ONERROR',
-    function(Base $f3) use ($configuration, $log, $handler): void {
-        $exception = $f3->get('EXCEPTION');
-
-        try {
-            if ($exception) {
-                $log->error($exception->getMessage(), ['exception' => $exception]);
-            } else {
-                $log->error($f3->get('ERROR.text'));
-            }
-
-            if ($configuration->debug !== 0) {
-                echo 'An error occurred: ';
-                echo $f3->get('ERROR.text') . "\n";
-                echo $f3->get('ERROR.trace');
-            } else {
-                if ($handler instanceof StreamHandler) {
-                    echo 'An error occured, please check the log file “' . $handler->getUrl() . '”.' . PHP_EOL;
-                } elseif ($handler instanceof ErrorLogHandler) {
-                    echo 'An error occured, please check your system logs.' . PHP_EOL;
-                } else {
-                    echo 'An error occurred' . PHP_EOL;
-                }
-            }
-        } catch (Exception $e) {
-            echo 'Unable to write logs.' . PHP_EOL;
-            echo $e->getMessage() . PHP_EOL;
-        }
-    }
-);
-
+// Try to log errors encountered by error handler.
+Debugger::setLogger($container->get(Tracy\Bridges\Psr\PsrToTracyLoggerAdapter::class));
 if ($configuration->debug !== 0) {
-    ini_set('display_errors', '0');
+    // Tracy will not use logger in development mode, let’s do it ourselves.
+    Debugger::$onFatalError[] = function(Throwable $error) use ($log): void {
+        $log->error('Unhandled error occurred.', ['exception' => $error]);
+    };
+
+    if (!Tracy\Helpers::isCli()) {
+        // AJAX support requires session to be started before dispatch.
+        $session = $container->get(helpers\Session::class);
+        $session->start();
+    }
 }
+Debugger::dispatch();

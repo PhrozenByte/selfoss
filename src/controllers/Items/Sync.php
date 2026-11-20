@@ -2,36 +2,29 @@
 
 declare(strict_types=1);
 
-namespace controllers\Items;
+namespace Selfoss\controllers\Items;
 
-use helpers\Authentication;
-use helpers\Configuration;
-use function helpers\json_response;
-use helpers\View;
-use helpers\ViewHelper;
+use Selfoss\daos;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\Configuration;
+use function Selfoss\helpers\json_response;
+use Selfoss\helpers\View;
+use Selfoss\helpers\ViewHelper;
 
 /**
  * Controller for synchronizing item statuses
  */
-class Sync {
-    private Authentication $authentication;
-    private Configuration $configuration;
-    private \daos\Items $itemsDao;
-    private \daos\Sources $sourcesDao;
-    private \controllers\Tags $tagsController;
-    private \daos\Tags $tagsDao;
-    private View $view;
-    private ViewHelper $viewHelper;
-
-    public function __construct(Authentication $authentication, Configuration $configuration, \daos\Items $itemsDao, \daos\Sources $sourcesDao, \controllers\Tags $tagsController, \daos\Tags $tagsDao, View $view, ViewHelper $viewHelper) {
-        $this->authentication = $authentication;
-        $this->configuration = $configuration;
-        $this->itemsDao = $itemsDao;
-        $this->sourcesDao = $sourcesDao;
-        $this->tagsController = $tagsController;
-        $this->tagsDao = $tagsDao;
-        $this->view = $view;
-        $this->viewHelper = $viewHelper;
+final readonly class Sync {
+    public function __construct(
+        private Authentication $authentication,
+        private Configuration $configuration,
+        private daos\Items $itemsDao,
+        private daos\Sources $sourcesDao,
+        private \Selfoss\controllers\Tags $tagsController,
+        private daos\Tags $tagsDao,
+        private View $view,
+        private ViewHelper $viewHelper
+    ) {
     }
 
     /**
@@ -55,14 +48,14 @@ class Sync {
         $lastUpdate = $this->itemsDao->lastUpdate();
 
         $sync = [
-            'lastUpdate' => $lastUpdate !== null ? $lastUpdate->format(\DateTime::ATOM) : null,
+            'lastUpdate' => $lastUpdate?->format(\DateTime::ATOM),
         ];
 
         if (array_key_exists('itemsSinceId', $params)) {
             $sinceId = (int) $params['itemsSinceId'];
             if ($sinceId >= 0) {
                 $notBefore = isset($params['itemsNotBefore']) ? new \DateTime($params['itemsNotBefore']) : null;
-                if ($sinceId === 0 || !$notBefore) {
+                if ($sinceId === 0 || $notBefore === null) {
                     $sinceId = $this->itemsDao->lowestIdOfInterest() - 1;
                     // only send 1 day worth of items
                     $notBefore = new \DateTime();
@@ -121,7 +114,7 @@ class Sync {
                 $this->view->jsonError(['updatedStatuses' => 'not an array']);
             }
 
-            foreach ($updatedStatuses as $index => $status) {
+            foreach ($updatedStatuses as $index => &$status) {
                 if (!is_array($status)) {
                     $this->view->jsonError(["updatedStatuses[$index]" => 'not an array']);
                 }

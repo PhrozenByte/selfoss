@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
-use helpers\Storage\FileStorage;
 use Monolog\Logger;
+use Selfoss\helpers\Storage\FileStorage;
 
 /**
  * Icon storage.
  */
-class IconStore {
-    private FileStorage $storage;
-    private Logger $logger;
-
-    public function __construct(FileStorage $storage, Logger $logger) {
-        $this->storage = $storage;
-        $this->logger = $logger;
+final readonly class IconStore {
+    public function __construct(
+        private FileStorage $storage,
+        private Logger $logger
+    ) {
     }
 
     /**

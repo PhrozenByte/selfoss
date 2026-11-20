@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
-use helpers\Storage\FileStorage;
 use Monolog\Logger;
+use Selfoss\helpers\Storage\FileStorage;
 
 /**
  * Thumbnail storage.
  */
-class ThumbnailStore {
-    private Logger $logger;
-    private FileStorage $storage;
-
-    public function __construct(Logger $logger, FileStorage $storage) {
-        $this->storage = $storage;
-        $this->logger = $logger;
+final readonly class ThumbnailStore {
+    public function __construct(
+        private Logger $logger,
+        private FileStorage $storage
+    ) {
     }
 
     /**

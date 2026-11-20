@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace controllers;
+namespace Selfoss\controllers;
 
-use daos\ItemOptions;
 use FeedWriter\RSS2;
-use helpers\Authentication;
-use helpers\Configuration;
-use helpers\View;
+use Selfoss\daos;
+use Selfoss\daos\ItemOptions;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\Configuration;
+use Selfoss\helpers\View;
 
 /**
  * Controller for rss access
@@ -17,21 +18,15 @@ use helpers\View;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Rss {
-    private Authentication $authentication;
-    private Configuration $configuration;
-    private RSS2 $feedWriter;
-    private \daos\Items $itemsDao;
-    private \daos\Sources $sourcesDao;
-    private View $view;
-
-    public function __construct(Authentication $authentication, Configuration $configuration, RSS2 $feedWriter, \daos\Items $itemsDao, \daos\Sources $sourcesDao, View $view) {
-        $this->authentication = $authentication;
-        $this->configuration = $configuration;
-        $this->feedWriter = $feedWriter;
-        $this->itemsDao = $itemsDao;
-        $this->sourcesDao = $sourcesDao;
-        $this->view = $view;
+final readonly class Rss {
+    public function __construct(
+        private Authentication $authentication,
+        private Configuration $configuration,
+        private RSS2 $feedWriter,
+        private daos\Items $itemsDao,
+        private daos\Sources $sourcesDao,
+        private View $view
+    ) {
     }
 
     /**
@@ -56,9 +51,7 @@ class Rss {
         $newestEntryDate = null;
         $itemsToMark = [];
         foreach ($this->itemsDao->get($options) as $item) {
-            if ($newestEntryDate === null) {
-                $newestEntryDate = $item['datetime'];
-            }
+            $newestEntryDate ??= $item['datetime'];
             $newItem = $this->feedWriter->createNewItem();
 
             // get Source Name
@@ -95,9 +88,7 @@ class Rss {
             $this->itemsDao->mark($itemsToMark);
         }
 
-        if ($newestEntryDate === null) {
-            $newestEntryDate = new \DateTime();
-        }
+        $newestEntryDate ??= new \DateTime();
         $this->feedWriter->setDate($newestEntryDate);
 
         $this->feedWriter->printFeed();

@@ -1,8 +1,9 @@
 @use 'sass:color';
 
-@import 'npm:yet-another-react-lightbox/dist/styles.css';
+@import 'npm:yet-another-react-lightbox/styles.css';
 @import 'npm:reset-css/sass/reset';
 @import 'mixins/visually-hidden';
+@import 'help';
 
 /* base */
 
@@ -73,6 +74,20 @@ input:focus {
 
 button::-moz-focus-inner {
     border: 0;
+}
+
+html:has(dialog[open]) {
+    overflow: hidden;
+}
+
+dialog {
+    position: relative;
+
+    .close {
+        position: absolute;
+        right: 10;
+        top: 10;
+    }
 }
 
 @import 'popup-menu';
@@ -1376,7 +1391,6 @@ span.offline-count.diff {
         width: 100%;
         margin: 0;
         font-size: 0.8em;
-        margin-bottom: 0;
         padding: 0;
         height: 50px;
         box-sizing: border-box;
@@ -1463,8 +1477,7 @@ span.offline-count.diff {
 
 /* emojis */
 img[src^='http://s.w.org/images/core/emoji'],
-img[src^='https://s.w.org/images/core/emoji']
-{
+img[src^='https://s.w.org/images/core/emoji'] {
     display: inline;
     height: 1em;
     margin: 0;

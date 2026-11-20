@@ -2,31 +2,24 @@
 
 declare(strict_types=1);
 
-namespace controllers\Sources;
+namespace Selfoss\controllers\Sources;
 
-use helpers\Authentication;
-use helpers\ContentLoader;
-use helpers\Misc;
-use helpers\UpdateVisitor;
-use helpers\View;
 use InvalidArgumentException;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\ContentLoader;
+use Selfoss\helpers\Misc;
+use Selfoss\helpers\UpdateVisitor;
+use Selfoss\helpers\View;
 
 /**
  * Controller updating sources
  */
-class Update {
-    private Authentication $authentication;
-    private ContentLoader $contentLoader;
-    private View $view;
-
+final readonly class Update {
     public function __construct(
-        Authentication $authentication,
-        ContentLoader $contentLoader,
-        View $view
+        private Authentication $authentication,
+        private ContentLoader $contentLoader,
+        private View $view
     ) {
-        $this->authentication = $authentication;
-        $this->contentLoader = $contentLoader;
-        $this->view = $view;
     }
 
     /**
@@ -118,7 +111,7 @@ class Update {
 
         try {
             $id = Misc::forceId($id);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             $this->view->error('invalid id given');
         }
 

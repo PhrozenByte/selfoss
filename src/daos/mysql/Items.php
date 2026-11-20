@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace daos\mysql;
+namespace Selfoss\daos\mysql;
 
-use daos\DatabaseInterface;
-use daos\ItemOptions;
 use DateTime;
 use DateTimeImmutable;
-use helpers\Configuration;
-use helpers\HtmlString;
 use Monolog\Logger;
+use Selfoss\daos\DatabaseInterface;
+use Selfoss\daos\ItemOptions;
+use Selfoss\helpers\Configuration;
+use Selfoss\helpers\HtmlString;
 
 /**
  * Class for accessing persistent saved items -- mysql
@@ -20,21 +20,18 @@ use Monolog\Logger;
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  * @author     Harald Lapp <harald.lapp@gmail.com>
  */
-class Items implements \daos\ItemsInterface {
+class Items implements \Selfoss\daos\ItemsInterface {
     /** Indicates whether last run has more results or not */
     protected bool $hasMore = false;
 
     /** @var class-string SQL helper */
     protected static string $stmt = Statements::class;
 
-    private Logger $logger;
-    private Configuration $configuration;
-    protected DatabaseInterface $database;
-
-    public function __construct(Logger $logger, Configuration $configuration, DatabaseInterface $database) {
-        $this->configuration = $configuration;
-        $this->database = $database;
-        $this->logger = $logger;
+    public function __construct(
+        private readonly Logger $logger,
+        private readonly Configuration $configuration,
+        protected DatabaseInterface $database
+    ) {
     }
 
     /**
@@ -253,7 +250,7 @@ class Items implements \daos\ItemsInterface {
                 $params[':search'] = $params[':search2'] = $params[':search3'] = [$matches['regex'], \PDO::PARAM_STR];
                 $where[] = static::$stmt::exprOr(static::$stmt::matchesRegex('items.title', ':search'), static::$stmt::matchesRegex('items.content', ':search2'), static::$stmt::matchesRegex('sources.title', ':search3'));
             } else {
-                $search = implode('%', \helpers\Search::splitTerms($options->search));
+                $search = implode('%', \Selfoss\helpers\Search::splitTerms($options->search));
                 $params[':search'] = $params[':search2'] = $params[':search3'] = ['%' . $search . '%', \PDO::PARAM_STR];
                 $where[] = '(items.title LIKE :search OR items.content LIKE :search2 OR sources.title LIKE :search3) ';
             }

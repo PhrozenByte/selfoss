@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace spouts\youtube;
 
-use helpers\FeedReader;
-use helpers\HtmlString;
-use helpers\Image;
 use Monolog\Logger;
+use Selfoss\helpers\FeedReader;
+use Selfoss\helpers\HtmlString;
+use Selfoss\helpers\Image;
 use SimplePie;
 use spouts\Item;
 use spouts\Parameter;
@@ -37,12 +37,13 @@ class youtube extends \spouts\rss\feed {
         ],
     ];
 
-    private UrlHighlight $urlHighlight;
-
-    public function __construct(UrlHighlight $urlHighlight, FeedReader $feed, Image $imageHelper, Logger $logger) {
+    public function __construct(
+        private readonly UrlHighlight $urlHighlight,
+        FeedReader $feed,
+        Image $imageHelper,
+        Logger $logger
+    ) {
         parent::__construct($feed, $imageHelper, $logger);
-
-        $this->urlHighlight = $urlHighlight;
     }
 
     public function load(array $params): void {
@@ -51,7 +52,7 @@ class youtube extends \spouts\rss\feed {
     }
 
     public function getXmlUrl(array $params): string {
-        $urlOrUsername = $params['channel'];
+        $urlOrUsername = (string) $params['channel'];
         if (preg_match('(^https?://www.youtube.com/channel/([a-zA-Z0-9_-]+)$)', $urlOrUsername, $matched)) {
             $id = $matched[1];
             $feed_type = 'channel_id';

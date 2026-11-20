@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace controllers;
+namespace Selfoss\controllers;
 
 use Bramus\Router\Router;
-use daos\ItemOptions;
-use helpers\Authentication;
-use helpers\StringKeyedArray;
-use helpers\View;
-use helpers\ViewHelper;
+use Selfoss\daos;
+use Selfoss\daos\ItemOptions;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\StringKeyedArray;
+use Selfoss\helpers\View;
+use Selfoss\helpers\ViewHelper;
 
 /**
  * Controller for root
@@ -18,25 +19,17 @@ use helpers\ViewHelper;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Index {
-    private Authentication $authentication;
-    private \daos\Items $itemsDao;
-    private Router $router;
-    private \daos\Sources $sourcesDao;
-    private Tags $tagsController;
-    private \daos\Tags $tagsDao;
-    private View $view;
-    private ViewHelper $viewHelper;
-
-    public function __construct(Authentication $authentication, \daos\Items $itemsDao, Router $router, \daos\Sources $sourcesDao, Tags $tagsController, \daos\Tags $tagsDao, View $view, ViewHelper $viewHelper) {
-        $this->authentication = $authentication;
-        $this->itemsDao = $itemsDao;
-        $this->router = $router;
-        $this->sourcesDao = $sourcesDao;
-        $this->tagsController = $tagsController;
-        $this->tagsDao = $tagsDao;
-        $this->view = $view;
-        $this->viewHelper = $viewHelper;
+final readonly class Index {
+    public function __construct(
+        private Authentication $authentication,
+        private daos\Items $itemsDao,
+        private Router $router,
+        private daos\Sources $sourcesDao,
+        private Tags $tagsController,
+        private daos\Tags $tagsDao,
+        private View $view,
+        private ViewHelper $viewHelper
+    ) {
     }
 
     /**
@@ -83,7 +76,7 @@ class Index {
 
         $lastUpdate = $this->itemsDao->lastUpdate();
         $result = [
-            'lastUpdate' => $lastUpdate !== null ? $lastUpdate->format(\DateTime::ATOM) : null,
+            'lastUpdate' => $lastUpdate?->format(\DateTime::ATOM),
             'hasMore' => $items['hasMore'],
             'entries' => $items['entries'],
             'all' => $statsAll,
@@ -130,7 +123,7 @@ class Index {
      *     hasMore: bool,
      * } html with items
      */
-    private function loadItems(array $params, array $tags) {
+    private function loadItems(array $params, array $tags): array {
         $options = new ItemOptions($params);
         $entries = [];
         foreach ($this->itemsDao->get($options) as $item) {

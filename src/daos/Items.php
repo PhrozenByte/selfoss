@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace daos;
+namespace Selfoss\daos;
 
 use DateTime;
 use DateTimeImmutable;
-use helpers\Authentication;
+use Selfoss\helpers\Authentication;
 
 /**
  * Class for accessing persistent saved items
@@ -16,16 +16,11 @@ use helpers\Authentication;
  * @author     Harald Lapp <harald.lapp@gmail.com>
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Items implements ItemsInterface {
-    private Authentication $authentication;
-    private ItemsInterface $backend;
-
+final readonly class Items implements ItemsInterface {
     public function __construct(
-        Authentication $authentication,
-        ItemsInterface $backend
+        private Authentication $authentication,
+        private ItemsInterface $backend
     ) {
-        $this->authentication = $authentication;
-        $this->backend = $backend;
     }
 
     public function mark(array $ids): void {

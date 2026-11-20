@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-namespace controllers;
+namespace Selfoss\controllers;
 
-use helpers\Authentication\AuthenticationService;
-use helpers\View;
+use Selfoss\helpers\Authentication\AuthenticationService;
+use Selfoss\helpers\View;
 
 /**
  * Controller for user related tasks
  */
-class Authentication {
-    private AuthenticationService $authenticationService;
-    private View $view;
-
-    public function __construct(AuthenticationService $authenticationService, View $view) {
-        $this->authenticationService = $authenticationService;
-        $this->view = $view;
+final readonly class Authentication {
+    public function __construct(
+        private AuthenticationService $authenticationService,
+        private View $view
+    ) {
     }
 
     /**
@@ -58,7 +56,7 @@ class Authentication {
      * logout for api json access
      * json
      */
-    public function logout(): void {
+    public function logout(): never {
         $this->authenticationService->destroy();
         $this->view->jsonSuccess([
             'success' => true,

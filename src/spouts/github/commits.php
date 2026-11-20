@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace spouts\github;
 
-use helpers\HtmlString;
-use helpers\WebClient;
+use Selfoss\helpers\HtmlString;
+use Selfoss\helpers\WebClient;
 use spouts\Item;
 use spouts\Parameter;
 
@@ -63,10 +63,9 @@ class commits extends \spouts\spout {
     /** @var Commit[] current fetched items */
     private array $items = [];
 
-    private WebClient $webClient;
-
-    public function __construct(WebClient $webClient) {
-        $this->webClient = $webClient;
+    public function __construct(
+        private readonly WebClient $webClient
+    ) {
     }
 
     //
@@ -120,15 +119,15 @@ class commits extends \spouts\spout {
             $author = $item['commit']['author']['name'];
 
             yield new Item(
-                $id,
-                $title,
-                $content,
-                $thumbnail,
-                $icon,
-                $link,
-                $date,
-                $author,
-                null
+                id: $id,
+                title: $title,
+                content: $content,
+                thumbnail: $thumbnail,
+                icon: $icon,
+                link: $link,
+                date: $date,
+                author: $author,
+                extraData: null,
             );
         }
     }

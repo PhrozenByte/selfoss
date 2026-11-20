@@ -9,16 +9,15 @@ namespace spouts\twitter;
 
 use GuzzleHttp;
 use GuzzleHttp\Subscriber\Oauth\Oauth1;
-use helpers\WebClient;
+use Selfoss\helpers\WebClient;
 
 /**
  * Factory for TwitterV1ApiClient.
  */
-class TwitterV1ApiClientFactory {
-    private WebClient $webClient;
-
-    public function __construct(WebClient $webClient) {
-        $this->webClient = $webClient;
+final readonly class TwitterV1ApiClientFactory {
+    public function __construct(
+        private WebClient $webClient
+    ) {
     }
 
     /**

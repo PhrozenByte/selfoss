@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace spouts\rss;
 
-use helpers\FeedReader;
-use helpers\HtmlString;
-use helpers\Image;
 use Monolog\Logger;
+use Selfoss\helpers\FeedReader;
+use Selfoss\helpers\HtmlString;
+use Selfoss\helpers\Image;
 use SimplePie;
 use spouts\Item;
 use spouts\Parameter;
@@ -45,14 +45,11 @@ class feed extends \spouts\spout {
     /** @var SimplePie\Item[] current fetched items */
     private array $items = [];
 
-    private Logger $logger;
-    private FeedReader $feed;
-    private Image $imageHelper;
-
-    public function __construct(FeedReader $feed, Image $imageHelper, Logger $logger) {
-        $this->imageHelper = $imageHelper;
-        $this->logger = $logger;
-        $this->feed = $feed;
+    public function __construct(
+        private readonly FeedReader $feed,
+        private readonly Image $imageHelper,
+        private readonly Logger $logger
+    ) {
     }
 
     //
@@ -99,15 +96,15 @@ class feed extends \spouts\spout {
             $author = $this->getAuthorString($item);
 
             yield new Item(
-                $id,
-                $title,
-                $content,
-                $thumbnail,
-                $icon,
-                $link,
-                $date,
-                $author,
-                $item
+                id: $id,
+                title: $title,
+                content: $content,
+                thumbnail: $thumbnail,
+                icon: $icon,
+                link: $link,
+                date: $date,
+                author: $author,
+                extraData: $item,
             );
         }
     }
@@ -141,15 +138,15 @@ class feed extends \spouts\spout {
                 $this->logger->debug('icon: using feed logo: ' . $faviconUrl);
 
                 return $faviconUrl;
-            } else {
-                $this->logger->debug('icon: feed logo “' . $faviconUrl . '” not square enough with aspect ratio ' . $aspectRatio . '. Not using it.');
             }
+
+            $this->logger->debug('icon: feed logo “' . $faviconUrl . '” not square enough with aspect ratio ' . $aspectRatio . '. Not using it.');
         }
 
         // else fallback to the favicon of the associated web page
         $htmlUrl = $this->getHtmlUrl();
         if ($htmlUrl && ($iconData = $this->imageHelper->fetchFavicon($htmlUrl, true)) !== null) {
-            [$faviconUrl, $iconBlob] = $iconData;
+            [$faviconUrl] = $iconData;
             $this->logger->debug('icon: using feed homepage favicon: ' . $faviconUrl);
 
             return $faviconUrl;
@@ -158,7 +155,7 @@ class feed extends \spouts\spout {
         // else fallback to the favicon of the feed effective domain
         $feedUrl = $this->feed->getFeedUrl();
         if ($feedUrl && ($iconData = $this->imageHelper->fetchFavicon($feedUrl, true)) !== null) {
-            [$faviconUrl, $iconBlob] = $iconData;
+            [$faviconUrl] = $iconData;
             $this->logger->debug('icon: using feed homepage favicon: ' . $faviconUrl);
 
             return $faviconUrl;

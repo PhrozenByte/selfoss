@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 /**
  * Helper class for color handling
@@ -11,7 +11,7 @@ namespace helpers;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Color {
+final class Color {
     /**
      * generate random color
      *

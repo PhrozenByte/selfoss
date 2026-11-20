@@ -6,24 +6,19 @@
 
 declare(strict_types=1);
 
-namespace daos;
+namespace Selfoss\daos;
 
-use helpers\Authentication;
+use Selfoss\helpers\Authentication;
 
 /**
  * Proxy for accessing tag colors.
  */
-class Tags implements TagsInterface {
-    private Authentication $authentication;
-    /** Instance of backend-specific Tags class */
-    private TagsInterface $backend;
-
+final readonly class Tags implements TagsInterface {
     public function __construct(
-        Authentication $authentication,
-        TagsInterface $backend
+        private Authentication $authentication,
+        /** Instance of backend-specific Tags class */
+        private TagsInterface $backend
     ) {
-        $this->authentication = $authentication;
-        $this->backend = $backend;
     }
 
     public function saveTagColor(string $tag, string $color): void {

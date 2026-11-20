@@ -1,0 +1,295 @@
+import React, {
+    Dispatch,
+    MouseEvent,
+    SetStateAction,
+    useCallback,
+    useContext,
+    useEffect,
+    useEffectEvent,
+    useState,
+} from 'react';
+import { useMemo } from 'react';
+import { Link, useNavigate, useMatch, NavigateFunction } from 'react-router';
+import { useLocation, Location } from '../helpers/uri';
+import selfoss from '../selfoss-base';
+import Source, { Spout } from './Source';
+import { SpinnerBig } from './Spinner';
+import { LoadingState } from '../requests/LoadingState';
+import * as sourceRequests from '../requests/sources';
+import { getAllSources, SourceWithIcon } from '../requests/sources';
+import { useShouldReload } from '../helpers/hooks';
+import { LocalizationContext, Translate } from '../helpers/i18n';
+import { HttpError } from '../errors';
+
+function rand(): number {
+    // https://www.php.net/manual/en/function.mt-getrandmax.php#117620
+    return Math.floor(Math.random() * 2147483647);
+}
+
+type ExtraInitialData = {
+    spout?: string;
+    params?: {
+        [key: string]: string;
+    };
+};
+
+function handleAddSource(args: {
+    setSpouts: Dispatch<SetStateAction<{ [key: string]: Spout }>>;
+    setSources: Dispatch<SetStateAction<SourceWithIcon[]>>;
+    setNewIds: Dispatch<SetStateAction<Set<number>>>;
+    extraInitialData?: ExtraInitialData;
+    event?: MouseEvent;
+}): void {
+    const {
+        event = null,
+        setSources,
+        setSpouts,
+        setNewIds,
+        extraInitialData = {},
+    } = args;
+    if (event) {
+        event.preventDefault();
+    }
+
+    const id = rand();
+
+    setNewIds((newIds: Set<number>) => new Set([id, ...newIds]));
+
+    // Add new empty source.
+    setSources((sources) => [
+        {
+            id,
+            title: '',
+            tags: [],
+            spout: '',
+            params: {},
+            filter: null,
+            error: null,
+            lastentry: null,
+            icon: null,
+            ...extraInitialData,
+        },
+        ...sources,
+    ]);
+
+    // Refresh the spout datea
+    sourceRequests
+        .getSpouts()
+        .then((spouts) => {
+            // Update spout data.
+            setSpouts(spouts);
+        })
+        .catch(() => {
+            console.error(
+                'Unable to update spouts, falling back to previously fetched list.',
+            );
+        });
+}
+
+// load sources
+function loadSources(args: {
+    abortController: AbortController;
+    location: Location;
+    navigate: NavigateFunction;
+    setSpouts: Dispatch<SetStateAction<{ [key: string]: Spout }>>;
+    setSources: Dispatch<SetStateAction<SourceWithIcon[]>>;
+    setLoadingState: Dispatch<SetStateAction<LoadingState>>;
+    showError: (message: string) => void;
+    _: Translate;
+}): Promise<void> {
+    const {
+        abortController,
+        location,
+        navigate,
+        setSpouts,
+        setSources,
+        setLoadingState,
+        showError,
+        _,
+    } = args;
+    if (abortController.signal.aborted) {
+        return Promise.resolve();
+    }
+
+    setLoadingState(LoadingState.LOADING);
+
+    return getAllSources(abortController)
+        .then(({ sources, spouts }) => {
+            if (abortController.signal.aborted) {
+                return;
+            }
+
+            setSpouts(spouts);
+            setSources(sources);
+            setLoadingState(LoadingState.SUCCESS);
+
+            if (location.hash.startsWith('#source-')) {
+                const source = document.querySelector(
+                    `.source[data-id="${location.hash.replace(/^#source-/, '')}"]`,
+                );
+
+                if (!source) {
+                    return;
+                }
+
+                // needs to be delayed for some reason
+                requestAnimationFrame(() => {
+                    source.scrollIntoView();
+                });
+            }
+        })
+        .catch((error) => {
+            if (error.name === 'AbortError' || abortController.signal.aborted) {
+                return;
+            }
+
+            selfoss.handleAjaxError(error, false).catch((error) => {
+                if (
+                    error instanceof HttpError &&
+                    error.response.status === 403
+                ) {
+                    navigate('/sign/in', {
+                        state: {
+                            error: _('error_session_expired'),
+                        },
+                    });
+                    return;
+                }
+
+                showError(_('error_loading') + ' ' + error.message);
+            });
+
+            setLoadingState(LoadingState.FAILURE);
+        });
+}
+
+type SourcesPageProps = {
+    showError: (message: string) => void;
+};
+
+export default function SourcesPage(
+    props: SourcesPageProps,
+): React.JSX.Element {
+    const { showError } = props;
+    const _ = useContext(LocalizationContext);
+
+    const [spouts, setSpouts] = useState<{ [key: string]: Spout }>({});
+    const [sources, setSources] = useState<SourceWithIcon[]>([]);
+    const [newIds, setNewIds] = useState<Set<number>>(() => new Set());
+
+    const [loadingState, setLoadingState] = useState(LoadingState.INITIAL);
+
+    const forceReload = useShouldReload();
+
+    const navigate = useNavigate();
+    const location = useLocation();
+    const isAdding = useMatch('/manage/sources/add');
+
+    const reloader = useEffectEvent(
+        async (abortController: AbortController) => {
+            await loadSources({
+                abortController,
+                location,
+                navigate,
+                setSpouts,
+                setSources,
+                setLoadingState,
+                showError,
+                _,
+            });
+
+            if (isAdding) {
+                const params = new URLSearchParams(location.search);
+                handleAddSource({
+                    setSources,
+                    setSpouts,
+                    setNewIds,
+                    extraInitialData: {
+                        spout: 'spouts\\rss\\feed',
+                        params: {
+                            url: params.get('url') ?? '',
+                        },
+                    },
+                });
+
+                // Clear the value from the state so it does not bug us forever.
+                navigate('/manage/sources', { replace: true });
+            }
+        },
+    );
+
+    useEffect(() => {
+        const abortController = new AbortController();
+
+        reloader(abortController);
+
+        return () => {
+            abortController.abort();
+        };
+    }, [forceReload]);
+
+    const addOnClick = useCallback(
+        (event: MouseEvent) =>
+            handleAddSource({ event, setSources, setSpouts, setNewIds }),
+        [],
+    );
+
+    const [dirtySources, setDirtySources] = useState<{ [id: number]: boolean }>(
+        {},
+    );
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const isDirty = useMemo(
+        () => Object.values(dirtySources).includes(true),
+        [dirtySources],
+    );
+
+    // TODO: Error: useBlocker must be used within a data router.  See https://reactrouter.com/v6/routers/picking-a-router.
+    // usePrompt({
+    //     when: isDirty,
+    //     message: _('sources_leaving_unsaved_prompt'),
+    // });
+
+    if (loadingState === LoadingState.LOADING) {
+        return <SpinnerBig label={_('sources_loading')} />;
+    }
+
+    if (loadingState !== LoadingState.SUCCESS) {
+        return null;
+    }
+
+    return (
+        <>
+            <button className="source-add" onClick={addOnClick}>
+                {_('source_add')}
+            </button>
+            <a className="source-export" href="opmlexport">
+                {_('source_export')}
+            </a>
+            <Link className="source-opml" to="/opml">
+                {_('source_opml')}
+            </Link>
+            {sources ? (
+                <ul>
+                    {sources.map((source) => (
+                        <Source
+                            key={source.id}
+                            isNew={newIds.has(source.id)}
+                            dirty={dirtySources[source.id] ?? false}
+                            {...{
+                                source,
+                                setSources,
+                                spouts,
+                                setSpouts,
+                                setDirtySources,
+                                setNewIds,
+                                showError,
+                            }}
+                        />
+                    ))}
+                </ul>
+            ) : (
+                <p>{_('no_sources')}</p>
+            )}
+        </>
+    );
+}

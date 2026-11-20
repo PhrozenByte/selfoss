@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-namespace helpers\Filters;
+namespace Selfoss\helpers\Filters;
 
 /**
  * Filter that rejects an item iff inner filter admits it.
@@ -14,15 +14,14 @@ namespace helpers\Filters;
  *
  * @implements Filter<T>
  */
-final class NegationFilter implements Filter {
-    /** @var Filter<T> */
-    private Filter $filter;
-
+final readonly class NegationFilter implements Filter {
     /**
      * @param Filter<T> $filter
      */
-    public function __construct(Filter $filter) {
-        $this->filter = $filter;
+    public function __construct(
+        /** @var Filter<T> */
+        private Filter $filter
+    ) {
     }
 
     /**

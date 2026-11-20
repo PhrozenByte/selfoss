@@ -13,14 +13,14 @@ namespace spouts\twitter;
 
 use GuzzleHttp;
 use GuzzleHttp\Exception\BadResponseException;
-use helpers\HtmlString;
+use Selfoss\helpers\HtmlString;
 use spouts\Item;
 use stdClass;
 
 /**
  * Helpers for accessing Twitter V1 API.
  */
-class TwitterV1ApiClient {
+final readonly class TwitterV1ApiClient {
     private const GROUPED_ENTITY_TYPES = [
         'hashtags',
         'symbols',
@@ -29,10 +29,9 @@ class TwitterV1ApiClient {
         'media',
     ];
 
-    private GuzzleHttp\Client $client;
-
-    public function __construct(GuzzleHttp\Client $client) {
-        $this->client = $client;
+    public function __construct(
+        private GuzzleHttp\Client $client
+    ) {
     }
 
     /**
@@ -115,15 +114,15 @@ class TwitterV1ApiClient {
             $date = new \DateTimeImmutable($item->created_at);
 
             yield new Item(
-                $id,
-                $title,
-                $content,
-                $thumbnail,
-                $icon,
-                $link,
-                $date,
-                $author,
-                null
+                id: $id,
+                title: $title,
+                content: $content,
+                thumbnail: $thumbnail,
+                icon: $icon,
+                link: $link,
+                date: $date,
+                author: $author,
+                extraData: null,
             );
         }
     }
@@ -141,7 +140,7 @@ class TwitterV1ApiClient {
         if (isset($item->extended_entities) && isset($item->extended_entities->media) && count($item->extended_entities->media) > 0) {
             foreach ($item->extended_entities->media as $media) {
                 if ($media->type === 'photo') {
-                    $urlEscaped = htmlspecialchars($media->media_url_https, ENT_QUOTES);
+                    $urlEscaped = htmlspecialchars((string) $media->media_url_https, ENT_QUOTES);
                     $result .= '<p><a href="' . $urlEscaped . ':large"><img src="' . $urlEscaped . ':small" alt=""></a></p>' . PHP_EOL;
                 }
             }
@@ -151,7 +150,7 @@ class TwitterV1ApiClient {
             $quoted = $item->quoted_status;
             $entities = self::formatEntities($quoted->entities);
 
-            $result .= '<a href="https://twitter.com/' . htmlspecialchars($quoted->user->screen_name, ENT_QUOTES) . '">@' . htmlspecialchars($quoted->user->screen_name) . '</a>:';
+            $result .= '<a href="https://twitter.com/' . htmlspecialchars((string) $quoted->user->screen_name, ENT_QUOTES) . '">@' . htmlspecialchars((string) $quoted->user->screen_name) . '</a>:';
             $result .= '<blockquote>' . self::replaceEntities($quoted->full_text, $entities)->getRaw() . '</blockquote>';
         }
 
@@ -241,21 +240,21 @@ class TwitterV1ApiClient {
                     case 'hashtags':
                         $result[$start] = [
                             'text' => '#' . $entity->text,
-                            'url' => 'https://twitter.com/hashtag/' . urlencode($entity->text),
+                            'url' => 'https://twitter.com/hashtag/' . urlencode((string) $entity->text),
                             'end' => $end,
                         ];
                         break;
                     case 'symbols':
                         $result[$start] = [
                             'text' => '$' . $entity->text,
-                            'url' => 'https://twitter.com/search?q=%24' . urlencode($entity->text),
+                            'url' => 'https://twitter.com/search?q=%24' . urlencode((string) $entity->text),
                             'end' => $end,
                         ];
                         break;
                     case 'user_mentions':
                         $result[$start] = [
                             'text' => '@' . $entity->screen_name,
-                            'url' => 'https://twitter.com/' . urlencode($entity->screen_name),
+                            'url' => 'https://twitter.com/' . urlencode((string) $entity->screen_name),
                             'end' => $end,
                         ];
                         break;

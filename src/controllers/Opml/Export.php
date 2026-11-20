@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace controllers\Opml;
+namespace Selfoss\controllers\Opml;
 
-use helpers\Authentication;
-use helpers\Configuration;
-use helpers\SpoutLoader;
-use helpers\StringKeyedArray;
 use Monolog\Logger;
+use Selfoss\daos;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\Configuration;
+use Selfoss\helpers\SpoutLoader;
+use Selfoss\helpers\StringKeyedArray;
 
 /**
  * OPML loading and exporting controller
@@ -18,23 +19,16 @@ use Monolog\Logger;
  * @author     Michael Moore <stuporglue@gmail.com>
  * @author     Sean Rand <asanernd@gmail.com>
  */
-class Export {
-    private Authentication $authentication;
-    private Configuration $configuration;
-    private Logger $logger;
-    private SpoutLoader $spoutLoader;
-    private \XMLWriter $writer;
-    private \daos\Sources $sourcesDao;
-    private \daos\Tags $tagsDao;
-
-    public function __construct(Authentication $authentication, Configuration $configuration, Logger $logger, \daos\Sources $sourcesDao, SpoutLoader $spoutLoader, \daos\Tags $tagsDao, \XMLWriter $writer) {
-        $this->authentication = $authentication;
-        $this->configuration = $configuration;
-        $this->logger = $logger;
-        $this->sourcesDao = $sourcesDao;
-        $this->spoutLoader = $spoutLoader;
-        $this->tagsDao = $tagsDao;
-        $this->writer = $writer;
+final readonly class Export {
+    public function __construct(
+        private Authentication $authentication,
+        private Configuration $configuration,
+        private Logger $logger,
+        private daos\Sources $sourcesDao,
+        private SpoutLoader $spoutLoader,
+        private daos\Tags $tagsDao,
+        private \XMLWriter $writer
+    ) {
     }
 
     /**
@@ -48,7 +42,7 @@ class Export {
         // retrieve the feed url of the source
         $params = json_decode(html_entity_decode($source['params']), true);
         $feed = $this->spoutLoader->get($source['spout']);
-        $feedUrl = $feed !== null ? $feed->getXmlUrl($params) : null;
+        $feedUrl = $feed?->getXmlUrl($params);
 
         // if the spout doesn't return a feed url, the source isn't an RSS feed
         if ($feedUrl !== null) {
@@ -114,9 +108,7 @@ class Export {
         foreach ($this->sourcesDao->getAll() as $source) {
             if ($source['tags']) {
                 foreach ($source['tags'] as $tag) {
-                    if (!isset($taggedSources[$tag])) {
-                        $taggedSources[$tag] = [];
-                    }
+                    $taggedSources[$tag] ??= [];
                     $taggedSources[$tag][] = $source;
                 }
             } else {

@@ -10,9 +10,9 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
-use helpers\Authentication\AuthenticationService;
+use Selfoss\helpers\Authentication\AuthenticationService;
 
 /**
  * Helper class for user authentication.
@@ -23,11 +23,10 @@ use helpers\Authentication\AuthenticationService;
  *  - **Update**: Allows triggering source updates when *public update mode* is enabled.
  *  - **Privileged**: Any other operation (admin) user, full access without any limitations.
  */
-class Authentication {
-    private AuthenticationService $authenticationService;
-
-    public function __construct(AuthenticationService $authenticationService) {
-        $this->authenticationService = $authenticationService;
+final readonly class Authentication {
+    public function __construct(
+        private AuthenticationService $authenticationService
+    ) {
     }
 
     /**
@@ -64,10 +63,8 @@ class Authentication {
 
     /**
      * send 403 if not logged in
-     *
-     * @return never
      */
-    private function forbidden(): void {
+    private function forbidden(): never {
         header('HTTP/1.0 403 Forbidden');
         header('Content-type: text/plain');
         echo 'Access forbidden!';

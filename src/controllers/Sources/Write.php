@@ -2,46 +2,32 @@
 
 declare(strict_types=1);
 
-namespace controllers\Sources;
+namespace Selfoss\controllers\Sources;
 
-use helpers\Authentication;
-use helpers\ContentLoader;
-use helpers\Filters\FilterFactory;
-use helpers\Filters\FilterSyntaxError;
-use helpers\Misc;
-use helpers\Request;
-use helpers\SpoutLoader;
-use helpers\View;
+use Selfoss\daos;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\ContentLoader;
+use Selfoss\helpers\Filters\FilterFactory;
+use Selfoss\helpers\Filters\FilterSyntaxError;
+use Selfoss\helpers\Misc;
+use Selfoss\helpers\Request;
+use Selfoss\helpers\SpoutLoader;
+use Selfoss\helpers\View;
 use spouts\Parameter;
 
 /**
  * Controller for creating and editing sources
  */
-class Write {
-    private Authentication $authentication;
-    private ContentLoader $contentLoader;
-    private Request $request;
-    private \daos\Sources $sourcesDao;
-    private SpoutLoader $spoutLoader;
-    private \daos\Tags $tagsDao;
-    private View $view;
-
+final readonly class Write {
     public function __construct(
-        Authentication $authentication,
-        ContentLoader $contentLoader,
-        Request $request,
-        \daos\Sources $sourcesDao,
-        SpoutLoader $spoutLoader,
-        \daos\Tags $tagsDao,
-        View $view
+        private Authentication $authentication,
+        private ContentLoader $contentLoader,
+        private Request $request,
+        private daos\Sources $sourcesDao,
+        private SpoutLoader $spoutLoader,
+        private daos\Tags $tagsDao,
+        private View $view
     ) {
-        $this->authentication = $authentication;
-        $this->contentLoader = $contentLoader;
-        $this->request = $request;
-        $this->sourcesDao = $sourcesDao;
-        $this->spoutLoader = $spoutLoader;
-        $this->tagsDao = $tagsDao;
-        $this->view = $view;
     }
 
     /**
@@ -79,10 +65,8 @@ class Write {
 
         // clean up title and tag data to prevent XSS
         $title = htmlspecialchars($data['title']);
-        if (!isset($data['tags'])) {
-            $data['tags'] = [];
-        }
-        $tags = array_map('htmlspecialchars', $data['tags']);
+        $data['tags'] ??= [];
+        $tags = array_map(htmlspecialchars(...), $data['tags']);
         $spout = $data['spout'];
         $filter = $data['filter'];
 
@@ -103,7 +87,7 @@ class Write {
             if ($id !== null) {
                 $id = Misc::forceId($id);
             }
-        } catch (\InvalidArgumentException $e) {
+        } catch (\InvalidArgumentException) {
             $id = null;
         }
 

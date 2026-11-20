@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace controllers;
+namespace Selfoss\controllers;
 
-use helpers\Authentication;
-use helpers\Request;
-use helpers\StringKeyedArray;
-use helpers\View;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\Request;
+use Selfoss\helpers\StringKeyedArray;
+use Selfoss\helpers\View;
 
 /**
  * Controller for tag access
@@ -16,25 +16,17 @@ use helpers\View;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Tags {
+// TODO: Make readonly.
+final class Tags {
     /** @var ?StringKeyedArray<array{backColor: string, foreColor: string}> cache of tags and associated colors */
-    protected ?StringKeyedArray $tagsColors = null;
-
-    private Authentication $authentication;
-    private Request $request;
-    private \daos\Tags $tagsDao;
-    private View $view;
+    private ?StringKeyedArray $tagsColors = null;
 
     public function __construct(
-        Authentication $authentication,
-        Request $request,
-        \daos\Tags $tagsDao,
-        View $view
+        private readonly Authentication $authentication,
+        private readonly Request $request,
+        private readonly \Selfoss\daos\Tags $tagsDao,
+        private readonly View $view
     ) {
-        $this->authentication = $authentication;
-        $this->request = $request;
-        $this->tagsDao = $tagsDao;
-        $this->view = $view;
     }
 
     /**
@@ -47,9 +39,7 @@ class Tags {
      */
     public function tagsAddColors(array $itemTags, ?array $tags = null): StringKeyedArray {
         if ($tags === null) {
-            if ($this->tagsColors === null) {
-                $this->tagsColors = $this->getTagsWithColors($this->tagsDao->get());
-            }
+            $this->tagsColors ??= $this->getTagsWithColors($this->tagsDao->get());
         } else {
             $this->tagsColors = $this->getTagsWithColors($tags);
         }
@@ -98,9 +88,9 @@ class Tags {
 
     /**
      * returns all tags
-     * html
+     * json
      */
-    public function listTags(): void {
+    public function listTags(): never {
         $this->authentication->ensureCanRead();
 
         $tags = $this->tagsDao->getWithUnread();
@@ -121,7 +111,7 @@ class Tags {
         foreach ($tags as $tag) {
             $assocTags[$tag['tag']] = [
                 'backColor' => $tag['color'],
-                'foreColor' => \helpers\Color::colorByBrightness($tag['color']),
+                'foreColor' => \Selfoss\helpers\Color::colorByBrightness($tag['color']),
             ];
         }
 

@@ -8,6 +8,11 @@ parameters:
         - index.php
         - run.php
 
+
+    fileExtensions:
+        - php
+        - phtml
+
     bootstrapFiles:
         - src/constants.php
         - vendor/bin/.phpunit/phpunit/vendor/autoload.php
@@ -17,16 +22,19 @@ parameters:
         - utils/PHPStan/Stubs/ContainerInterface.stub
         - utils/PHPStan/Stubs/IcoFileLoader.stub
 
-    ignoreErrors:
-        # The arguments are provided by SimplePie and we want the value of a later one.
-        - '(Constructor of class helpers\\SimplePieFileGuzzle has an unused parameter \$force_fsockopen\.)'
-
-        # Bad PHPStan typing rules.
-        - '(Parameter #3 \$namespace of method XMLWriter::writeAttributeNs\(\) expects string, null given\.)'
-
     typeAliases:
         SpoutParameterInfo: 'array{title: string, type: spouts\Parameter::TYPE_*, default: string, required: bool, validation: array<spouts\Parameter::VALIDATION_*>, values?: array<string, string>}'
         SpoutParameters: 'array<string, SpoutParameterInfo>'
+
+    ignoreErrors:
+        -
+            message: '#^Method Selfoss\\helpers\\Database\\PdoSqliteFactory\:\:create\(\) should return PDO but returns Pdo\\Sqlite\.$#'
+            identifier: return.type
+            count: 1
+            path: src/helpers/Database/PdoSqliteFactory.php
+            # Only reported on PHP < 8.4
+            reportUnmatched: false
+
 
 includes:
     - vendor/phpstan/phpstan-deprecation-rules/rules.neon

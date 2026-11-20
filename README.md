@@ -19,7 +19,7 @@ selfoss is currently maintained by Jan Tojnar in his free time. Due to the [limi
 
 ## Installation
 
-1. Upload all files of this directory (IMPORTANT: also upload the invisible `.htaccess` files).
+1. Copy all files of this directory (IMPORTANT: also copy the invisible `.htaccess` files) to a document root of a PHP server.
 2. Make the directories `data/cache`, `data/favicons`, `data/logs`, `data/thumbnails` and `data/sqlite` writeable.
 3. Insert database access data in `config.ini` (see below). You do not need to change anything if you want to use SQLite.
 4. You do not need to create the database tables, they will be created automatically (ensure that your database user is allowed to create triggers).
@@ -43,7 +43,7 @@ No configuration is needed to use selfoss but you can customize the settings as 
 
 1. Backup your database and your `data/` directory.
 2. (IMPORTANT: do NOT delete the `data/` directory) delete all old files and directories excluding the directory `data/` and the file `config.ini`
-3. Upload all new files and directories excluding the `data/` directory (IMPORTANT: also upload the invisible `.htaccess` files).
+3. Copy all new files and directories excluding the `data/` directory (IMPORTANT: also copy the invisible `.htaccess` files) to your selfoss root.
 4. Consult the [NEWS file](NEWS.md) to learn about backwards incompatible changes.
 5. Clean your browser cache.
 6. Insert your current database connection and your individual configuration in `config.ini`. Important: we change the `config.ini` and add new options in newer versions. You have to update the `config.ini` too.
@@ -95,7 +95,6 @@ Very special thanks to all contributors of pull requests here on [GitHub](https:
 
 Special thanks to the great programmers of these libraries used by selfoss:
 
-* [FatFree PHP Framework](https://fatfreeframework.com/)
 * [SimplePie](http://simplepie.org/)
 * [WideImage](http://wideimage.sourceforge.net/)
 * [htmLawed](http://www.bioinformatics.org/phplabware/internal_utilities/htmLawed/)
@@ -104,6 +103,7 @@ Special thanks to the great programmers of these libraries used by selfoss:
 * [Graby](https://github.com/j0k3r/graby)
 * [FullTextRSS filters](http://help.fivefilters.org/customer/portal/articles/223153-site-patterns)
 * [yet-another-react-lightbox](https://github.com/igordanchenko/yet-another-react-lightbox)
+* [Tracy](https://tracy.nette.org/)
 
 Icon made by http://blackbooze.com/
 

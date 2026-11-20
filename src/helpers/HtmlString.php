@@ -2,16 +2,15 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 /**
  * A string wrapper representing a HTML fragment.
  */
-class HtmlString {
-    private string $content;
-
-    private function __construct(string $content) {
-        $this->content = $content;
+final readonly class HtmlString {
+    private function __construct(
+        private string $content
+    ) {
     }
 
     /**

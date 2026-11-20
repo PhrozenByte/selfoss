@@ -2,14 +2,19 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use Exception;
 use Fossar\GuzzleTranscoder\GuzzleTranscoder;
 use GuzzleHttp;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\HttpFactory;
 use Monolog\Logger;
+use Override;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Selfoss\helpers\Configuration\LoggerLevel;
 
 /**
  * Helper class for web request
@@ -18,14 +23,14 @@ use Psr\Http\Message\ResponseInterface;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Alexandre Rossi <alexandre.rossi@gmail.com>
  */
-class WebClient {
-    private Configuration $configuration;
+class WebClient implements ClientInterface {
     private ?GuzzleHttp\Client $httpClient = null;
-    private Logger $logger;
 
-    public function __construct(Configuration $configuration, Logger $logger) {
-        $this->configuration = $configuration;
-        $this->logger = $logger;
+    public function __construct(
+        private readonly Configuration $configuration,
+        private readonly HttpFactory $httpFactory,
+        private readonly Logger $logger
+    ) {
     }
 
     /**
@@ -50,7 +55,7 @@ class WebClient {
         $stack = HandlerStack::create();
         $stack->push(new GuzzleTranscoder());
 
-        if ($this->configuration->loggerLevel === Configuration::LOGGER_LEVEL_DEBUG) {
+        if ($this->configuration->loggerLevel === LoggerLevel::Debug) {
             if ($this->configuration->debug === 0) {
                 $logFormat = GuzzleHttp\MessageFormatter::SHORT;
             } elseif ($this->configuration->debug === 1) {
@@ -80,8 +85,13 @@ class WebClient {
                 // Guzzle will not send Accept-Encoding by default.
                 // https://github.com/guzzle/guzzle/pull/3215
                 // Delegate choosing compression method to curl.
-                \CURLOPT_ENCODING => '',
+                \CURLOPT_ACCEPT_ENCODING => '',
+                // Guzzle defaults to \CURL_HTTP_VERSION_1_1,
+                // which breaks servers that require HTTP 2.
+                // Delegate choosing protocol to curl.
+                \CURLOPT_HTTP_VERSION => \CURL_HTTP_VERSION_NONE,
             ],
+            'version' => '2',
         ];
     }
 
@@ -95,9 +105,7 @@ class WebClient {
     public function getUserAgent(?array $agentInfo = null): string {
         $userAgent = 'Selfoss/' . SELFOSS_VERSION;
 
-        if ($agentInfo === null) {
-            $agentInfo = [];
-        }
+        $agentInfo ??= [];
 
         $agentInfo[] = '+https://selfoss.aditu.de';
 
@@ -113,8 +121,7 @@ class WebClient {
      * @throws Exception Unless 200 0K response is received
      */
     public function request(string $url, ?string $agentInfo = null): string {
-        $http = $this->getHttpClient();
-        $response = $http->get($url);
+        $response = $this->sendRequest($this->httpFactory->createRequest('GET', $url));
         $data = (string) $response->getBody();
 
         if ($response->getStatusCode() !== 200) {
@@ -122,6 +129,13 @@ class WebClient {
         }
 
         return $data;
+    }
+
+    #[Override]
+    public function sendRequest(RequestInterface $request): ResponseInterface {
+        $http = $this->getHttpClient();
+
+        return $http->send($request);
     }
 
     /**

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace daos\sqlite;
+namespace Selfoss\daos\sqlite;
 
-use daos\CommonSqlDatabase;
-use helpers\DatabaseConnection;
 use Monolog\Logger;
+use Selfoss\daos\CommonSqlDatabase;
+use Selfoss\helpers\DatabaseConnection;
 
 /**
  * Base class for database access -- sqlite
@@ -16,21 +16,18 @@ use Monolog\Logger;
  * @author      Harald Lapp (harald.lapp@gmail.com)
  * @author      Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Database implements \daos\DatabaseInterface {
+final class Database implements \Selfoss\daos\DatabaseInterface {
     use CommonSqlDatabase;
-
-    private DatabaseConnection $connection;
-    private Logger $logger;
 
     /**
      * establish connection and create undefined tables
      *
      * @return  void
      */
-    public function __construct(DatabaseConnection $connection, Logger $logger) {
-        $this->connection = $connection;
-        $this->logger = $logger;
-
+    public function __construct(
+        private DatabaseConnection $connection,
+        private Logger $logger
+    ) {
         $this->logger->debug('Establishing SQLite database connection');
 
         $this->migrate();
@@ -41,7 +38,7 @@ class Database implements \daos\DatabaseInterface {
         $result = @$this->exec('SELECT "name" FROM "sqlite_master" WHERE "type" = \'table\'');
         $tables = [];
         foreach ($result as $table) {
-            foreach ($table as $key => $value) {
+            foreach ($table as $value) {
                 $tables[] = $value;
             }
         }
@@ -204,7 +201,7 @@ class Database implements \daos\DatabaseInterface {
             $this->commit();
         }
         // Jump straight from v6 to v8 due to bug in previous version of the code
-        // in \daos\sqlite\Database which
+        // in \Selfoss\daos\sqlite\Database which
         // set the database version to "7" for initial installs.
         if ($version < 8) {
             $this->logger->debug('Upgrading database schema to version 8');
@@ -294,21 +291,6 @@ class Database implements \daos\DatabaseInterface {
             $this->exec('INSERT INTO version (version) VALUES (14)');
             $this->commit();
         }
-    }
-
-    /**
-     * wrap insert statement to return id
-     *
-     * @param string $query sql statement
-     * @param array<string, mixed> $params sql params
-     *
-     * @return int id after insert
-     */
-    public function insert(string $query, array $params): int {
-        $this->exec($query, $params);
-        $res = $this->exec('SELECT last_insert_rowid() as lastid');
-
-        return (int) $res[0]['lastid'];
     }
 
     /**

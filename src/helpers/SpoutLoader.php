@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use Psr\Container\ContainerInterface;
 use spouts\spout;
@@ -15,14 +15,13 @@ use spouts\spout;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class SpoutLoader {
+final class SpoutLoader {
     /** @var ?array<class-string<spout<mixed>>, spout<mixed>> array of available spouts */
     private ?array $spouts = null;
 
-    private ContainerInterface $container;
-
-    public function __construct(ContainerInterface $container) {
-        $this->container = $container;
+    public function __construct(
+        private readonly ContainerInterface $container
+    ) {
     }
 
     /**
@@ -31,9 +30,7 @@ class SpoutLoader {
      * @return array<class-string<spout<mixed>>, spout<mixed>> available spouts
      */
     public function all(): array {
-        if ($this->spouts === null) {
-            $this->spouts = $this->readSpouts();
-        }
+        $this->spouts ??= $this->readSpouts();
 
         return $this->spouts;
     }
@@ -55,10 +52,10 @@ class SpoutLoader {
 
             if ($class instanceof spout) {
                 return $class;
-            } else {
-                return null;
             }
-        } catch (\ReflectionException $e) {
+
+            return null;
+        } catch (\ReflectionException) {
             return null;
         }
     }
@@ -91,7 +88,7 @@ class SpoutLoader {
      *
      * @return array<class-string<P>, P> list of instantiated spouts associated to their class names
      */
-    protected function loadClasses(string $location, string $parentClassName): array {
+    private function loadClasses(string $location, string $parentClassName): array {
         $return = [];
 
         foreach (new \DirectoryIterator($location) as $dirInfo) {

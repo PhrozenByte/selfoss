@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace daos;
+namespace Selfoss\daos;
 
 use DateTime;
 
@@ -114,7 +114,7 @@ final class ItemOptions {
 
         if (isset($data['extraIds']) && is_array($data['extraIds'])) {
             $this->extraIds = array_map(
-                fn($val) => (int) $val,
+                fn($val): int => (int) $val,
                 $data['extraIds']
             );
         } else {

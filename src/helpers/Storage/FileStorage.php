@@ -2,22 +2,19 @@
 
 declare(strict_types=1);
 
-namespace helpers\Storage;
+namespace Selfoss\helpers\Storage;
 
 use Monolog\Logger;
 
 /**
  * Simple file storage.
  */
-class FileStorage {
-    private Logger $logger;
-
-    /** Directory where the files will be stored */
-    private string $directory;
-
-    public function __construct(Logger $logger, string $directory) {
-        $this->logger = $logger;
-        $this->directory = $directory;
+final readonly class FileStorage {
+    public function __construct(
+        private Logger $logger,
+        /** Directory where the files will be stored */
+        private string $directory
+    ) {
     }
 
     /**
@@ -30,11 +27,11 @@ class FileStorage {
 
         if ($written !== false) {
             return $filename;
-        } else {
-            $this->logger->warning('Unable to store file: ' . $url . '. Please check permissions of ' . $this->directory);
-
-            return null;
         }
+
+        $this->logger->warning('Unable to store file: ' . $url . '. Please check permissions of ' . $this->directory);
+
+        return null;
     }
 
     /**

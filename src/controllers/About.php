@@ -2,31 +2,28 @@
 
 declare(strict_types=1);
 
-namespace controllers;
+namespace Selfoss\controllers;
 
-use helpers\Authentication;
-use helpers\Configuration;
-use helpers\View;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\Configuration;
+use Selfoss\helpers\View;
 
 /**
  * Controller for instance information API
  */
-class About {
-    private Authentication $authentication;
-    private Configuration $configuration;
-    private View $view;
-
-    public function __construct(Authentication $authentication, Configuration $configuration, View $view) {
-        $this->authentication = $authentication;
-        $this->configuration = $configuration;
-        $this->view = $view;
+final readonly class About {
+    public function __construct(
+        private Authentication $authentication,
+        private Configuration $configuration,
+        private View $view
+    ) {
     }
 
     /**
      * Provide information about the selfoss instance.
      * json
      */
-    public function about(): void {
+    public function about(): never {
         $wallabag = !empty($this->configuration->wallabag) ? [
             'url' => $this->configuration->wallabag, // string
             'version' => $this->configuration->wallabagVersion, // int

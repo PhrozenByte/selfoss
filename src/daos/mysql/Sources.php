@@ -2,15 +2,12 @@
 
 declare(strict_types=1);
 
-namespace daos\mysql;
+namespace Selfoss\daos\mysql;
 
-use daos\DatabaseInterface;
-use Exception;
-use helpers\Configuration;
 use function json_encode;
-use const JSON_ERROR_NONE;
-use function json_last_error;
-use function json_last_error_msg;
+use const JSON_THROW_ON_ERROR;
+use Selfoss\daos\DatabaseInterface;
+use Selfoss\helpers\Configuration;
 
 /**
  * Class for accessing persistent saved sources -- mysql
@@ -19,16 +16,14 @@ use function json_last_error_msg;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Sources implements \daos\SourcesInterface {
+class Sources implements \Selfoss\daos\SourcesInterface {
     /** @var class-string SQL helper */
     protected static string $stmt = Statements::class;
 
-    private Configuration $configuration;
-    protected DatabaseInterface $database;
-
-    public function __construct(Configuration $configuration, DatabaseInterface $database) {
-        $this->configuration = $configuration;
-        $this->database = $database;
+    public function __construct(
+        private readonly Configuration $configuration,
+        protected DatabaseInterface $database
+    ) {
     }
 
     /**
@@ -41,19 +36,30 @@ class Sources implements \daos\SourcesInterface {
      * @return int new id
      */
     public function add(string $title, array $tags, ?string $filter, string $spout, array $params): int {
-        $params = @json_encode($params);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(json_last_error_msg(), json_last_error());
-        }
-        assert($params !== false); // For PHPStan: Exception would be thrown when the function returns false.
+        $params = json_encode($params, JSON_THROW_ON_ERROR);
 
-        return $this->database->insert('INSERT INTO ' . $this->configuration->dbPrefix . 'sources (title, tags, filter, spout, params) VALUES (:title, :tags, :filter, :spout, :params)', [
+        return $this->insert('INSERT INTO ' . $this->configuration->dbPrefix . 'sources (title, tags, filter, spout, params) VALUES (:title, :tags, :filter, :spout, :params)', [
             ':title' => trim($title),
             ':tags' => static::$stmt::csvRow($tags),
             ':filter' => $filter,
             ':spout' => $spout,
             ':params' => htmlentities($params),
         ]);
+    }
+
+    /**
+     * wrap insert statement to return id
+     *
+     * @param string $query sql statement
+     * @param array<string, mixed> $params sql params
+     *
+     * @return int id after insert
+     */
+    protected function insert(string $query, array $params): int {
+        $this->database->exec($query, $params);
+        $res = $this->database->exec('SELECT LAST_INSERT_ID() as lastid');
+
+        return (int) $res[0]['lastid'];
     }
 
     /**
@@ -66,11 +72,7 @@ class Sources implements \daos\SourcesInterface {
      * @param array<string, mixed> $params the new params
      */
     public function edit(int $id, string $title, array $tags, ?string $filter, string $spout, array $params): void {
-        $params = @json_encode($params);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(json_last_error_msg(), json_last_error());
-        }
-        assert($params !== false); // For PHPStan: Exception would be thrown when the function returns false.
+        $params = json_encode($params, JSON_THROW_ON_ERROR);
 
         $this->database->exec('UPDATE ' . $this->configuration->dbPrefix . 'sources SET title=:title, tags=:tags, filter=:filter, spout=:spout, params=:params WHERE id=:id', [
             ':title' => trim($title),
@@ -293,11 +295,7 @@ class Sources implements \daos\SourcesInterface {
      * @return int id if any record is found
      */
     public function checkIfExists(string $title, string $spout, array $params): int {
-        $params = @json_encode($params);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception(json_last_error_msg(), json_last_error());
-        }
-        assert($params !== false); // For PHPStan: Exception would be thrown when the function returns false.
+        $params = json_encode($params, JSON_THROW_ON_ERROR);
 
         // Check if a entry exists with same title, spout and params
         $result = $this->database->exec('SELECT id FROM ' . $this->configuration->dbPrefix . 'sources WHERE title=:title AND spout=:spout AND params=:params', [

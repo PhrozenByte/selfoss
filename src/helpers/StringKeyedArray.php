@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use ArrayAccess;
 use Generator;
@@ -23,14 +23,13 @@ use OutOfBoundsException;
  * @implements IteratorAggregate<string, T>
  */
 final class StringKeyedArray implements ArrayAccess, IteratorAggregate, JsonSerializable {
-    /** @var array<string|int, T> */
-    private array $data;
-
     /**
      * @param array<string|int, T> $data
      */
-    public function __construct(array $data = []) {
-        $this->data = $data;
+    public function __construct(
+        /** @var array<string|int, T> */
+        private array $data = []
+    ) {
     }
 
     /**
@@ -47,8 +46,7 @@ final class StringKeyedArray implements ArrayAccess, IteratorAggregate, JsonSeri
      *
      * @return T
      */
-    #[\ReturnTypeWillChange]
-    public function &offsetGet($offset) {
+    public function &offsetGet($offset): mixed {
         if (!$this->offsetExists($offset)) {
             throw new OutOfBoundsException("Undefined array key “{$offset}”");
         }
@@ -82,11 +80,7 @@ final class StringKeyedArray implements ArrayAccess, IteratorAggregate, JsonSeri
         })();
     }
 
-    /**
-     * @return mixed
-     */
-    #[\ReturnTypeWillChange]
-    public function jsonSerialize() {
+    public function jsonSerialize(): \stdClass {
         // Objects can only have strings for keys.
         return (object) $this->data;
     }

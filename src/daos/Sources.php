@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace daos;
+namespace Selfoss\daos;
 
-use helpers\Authentication;
-use helpers\SpoutLoader;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\SpoutLoader;
 use spouts\Parameter;
 
 /**
@@ -17,19 +17,12 @@ use spouts\Parameter;
  * @author     Daniel Seither <post@tiwoc.de>
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Sources implements SourcesInterface {
-    private Authentication $authentication;
-    private SourcesInterface $backend;
-    private SpoutLoader $spoutLoader;
-
+final readonly class Sources implements SourcesInterface {
     public function __construct(
-        Authentication $authentication,
-        SourcesInterface $backend,
-        SpoutLoader $spoutLoader
+        private Authentication $authentication,
+        private SourcesInterface $backend,
+        private SpoutLoader $spoutLoader
     ) {
-        $this->authentication = $authentication;
-        $this->backend = $backend;
-        $this->spoutLoader = $spoutLoader;
     }
 
     public function add(string $title, array $tags, ?string $filter, string $spout, array $params): int {
@@ -114,7 +107,7 @@ class Sources implements SourcesInterface {
      *
      * @author Tobias Zeising
      */
-    public function validate(string $title, string $spout, array $params) {
+    public function validate(string $title, string $spout, array $params): array|bool {
         $result = [];
 
         // title
@@ -158,17 +151,17 @@ class Sources implements SourcesInterface {
                 }
 
                 foreach ($validation as $validate) {
-                    if ($validate === Parameter::VALIDATION_ALPHA && !preg_match("([A-Za-z._\b]+)", $value)) {
+                    if ($validate === Parameter::VALIDATION_ALPHA && !(is_string($value) && preg_match("([A-Za-z._\b]+)", $value))) {
                         $result[$id] = 'only alphabetic characters allowed for ' . $spout->params[$id]['title'];
-                    } elseif ($validate === Parameter::VALIDATION_EMAIL && !preg_match('(^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$)', $value)) {
+                    } elseif ($validate === Parameter::VALIDATION_EMAIL && !(is_string($value) && preg_match('(^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$)', $value))) {
                         $result[$id] = $spout->params[$id]['title'] . ' is not a valid email address';
                     } elseif ($validate === Parameter::VALIDATION_NUMERIC && !is_numeric($value)) {
                         $result[$id] = 'only numeric values allowed for ' . $spout->params[$id]['title'];
                     } elseif ($validate === Parameter::VALIDATION_INT && (int) $value != $value) {
                         $result[$id] = 'only integer values allowed for ' . $spout->params[$id]['title'];
-                    } elseif ($validate === Parameter::VALIDATION_ALPHANUMERIC && !preg_match("([A-Za-z0-9._\b]+)", $value)) {
+                    } elseif ($validate === Parameter::VALIDATION_ALPHANUMERIC && !(is_string($value) && preg_match("([A-Za-z0-9._\b]+)", $value))) {
                         $result[$id] = 'only alphanumeric values allowed for ' . $spout->params[$id]['title'];
-                    } elseif ($validate === Parameter::VALIDATION_NONEMPTY && strlen(trim($value)) === 0) {
+                    } elseif ($validate === Parameter::VALIDATION_NONEMPTY && strlen(trim((string) $value)) === 0) {
                         $result[$id] = 'empty value for ' . $spout->params[$id]['title'] . ' not allowed';
                     }
                 }

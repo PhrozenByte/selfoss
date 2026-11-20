@@ -8,10 +8,10 @@ use GuzzleHttp;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Uri;
 use GuzzleHttp\Psr7\UriResolver;
-use helpers\HtmlString;
-use helpers\Image;
-use helpers\WebClient;
 use Psr\Http\Message\ResponseInterface;
+use Selfoss\helpers\HtmlString;
+use Selfoss\helpers\Image;
+use Selfoss\helpers\WebClient;
 use spouts\Item;
 use spouts\Parameter;
 
@@ -65,12 +65,10 @@ class reddit2 extends \spouts\spout {
     /** @var RedditItem[] current fetched items */
     private array $items = [];
 
-    private Image $imageHelper;
-    private WebClient $webClient;
-
-    public function __construct(Image $imageHelper, WebClient $webClient) {
-        $this->imageHelper = $imageHelper;
-        $this->webClient = $webClient;
+    public function __construct(
+        private readonly Image $imageHelper,
+        private readonly WebClient $webClient
+    ) {
     }
 
     /**
@@ -141,15 +139,15 @@ class reddit2 extends \spouts\spout {
             $author = null;
 
             yield new Item(
-                $id,
-                $title,
-                $content,
-                $thumbnail,
-                $icon,
-                $link,
-                $date,
-                $author,
-                null
+                id: $id,
+                title: $title,
+                content: $content,
+                thumbnail: $thumbnail,
+                icon: $icon,
+                link: $link,
+                date: $date,
+                author: $author,
+                extraData: null,
             );
         }
     }
@@ -190,7 +188,7 @@ class reddit2 extends \spouts\spout {
     private function findSiteIcon(string $url): ?string {
         $faviconUrl = null;
         if ($url && ($iconData = $this->imageHelper->fetchFavicon($url)) !== null) {
-            [$faviconUrl, $iconBlob] = $iconData;
+            [$faviconUrl] = $iconData;
         }
 
         return $faviconUrl;

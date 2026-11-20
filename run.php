@@ -34,9 +34,9 @@ if (PHP_SAPI === 'cli-server') {
         // Redirects to proper location for frontend.
         header('Location: /public' . $path);
         exit;
-    } else {
-        // taken from cli arg, hack for updater
-        $_SERVER['SERVER_ADDR'] = $_SERVER['SERVER_NAME'];
-        require 'index.php';
     }
+
+    // taken from cli arg, hack for updater
+    $_SERVER['SERVER_ADDR'] = $_SERVER['SERVER_NAME'];
+    require 'index.php';
 }

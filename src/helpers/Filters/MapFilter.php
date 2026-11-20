@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-namespace helpers\Filters;
+namespace Selfoss\helpers\Filters;
 
 /**
  * Filter that admits an item iff the inner filter admits an item obtained from the original item with the given transform function.
@@ -16,9 +16,6 @@ namespace helpers\Filters;
  * @implements Filter<T>
  */
 final class MapFilter implements Filter {
-    /** @var Filter<InnerT> */
-    private Filter $filter;
-
     /** @var callable(T): InnerT */
     private $transform;
 
@@ -26,8 +23,10 @@ final class MapFilter implements Filter {
      * @param Filter<InnerT> $filter
      * @param callable(T): InnerT $transform
      */
-    public function __construct(Filter $filter, callable $transform) {
-        $this->filter = $filter;
+    public function __construct(
+        private readonly Filter $filter,
+        callable $transform
+    ) {
         $this->transform = $transform;
     }
 

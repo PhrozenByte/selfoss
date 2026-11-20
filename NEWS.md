@@ -1,7 +1,7 @@
 # selfoss news
 ## 2.20 – unreleased
 
-**This version currently requires PHP 7.4 or newer. (Might be increased later.)**
+**This version currently requires PHP 8.2 or newer.**
 
 ### New features
 - YouTube spout now accepts handles (starting with `@` sign). ([#1412](https://github.com/fossar/selfoss/pull/1412))
@@ -10,8 +10,12 @@
 - Source filters can be negated, or limited to only title or only content. ([#1423](https://github.com/fossar/selfoss/pull/1423))
 - Sources can be filtered based on item’s author, URL or categories. ([#1423](https://github.com/fossar/selfoss/pull/1423), [#1424](https://github.com/fossar/selfoss/pull/1424))
 - Source filter expression is now validated whenever a source is modified. ([#1423](https://github.com/fossar/selfoss/pull/1423))
+- RSS with enclosures spout now links audio enclosures (e.g. podcasts). ([#1574](https://github.com/fossar/selfoss/pull/1574))
 - Garbage collection can be completely disabled by setting `items_lifetime=0`.
 - Tamil (`ta`) translation was added.
+- Configuration file path can be overridden with `SELFOSS_CONFIG_PATH` environment variable. Alternately, you can specify `SELFOSS_CONFIG_DIR` where selfoss will look for `config.ini`. ([#1603](https://github.com/fossar/selfoss/pull/1603))
+- Keyboard shortcuts can be displayed by pressing <kbd>?</kbd>. ([#1612](https://github.com/fossar/selfoss/pull/1612))
+- Errors encounteded during startup are now logged to system logger as configured by PHP’s [`error_log`](https://www.php.net/manual/en/function.error-log.php) configuration directive. ([#1640](https://github.com/fossar/selfoss/pull/1640))
 
 ### Bug fixes
 - Configuration parser was changed to *raw* method, which relaxes the requirement to quote option values containing special characters in `config.ini`. ([#1371](https://github.com/fossar/selfoss/issues/1371))
@@ -26,6 +30,10 @@
 - Fix incorrect handling of tags in MySQL backend, which could result in OPML export being broken ([#1439](https://github.com/fossar/selfoss/pull/1439))
 - Fix sharing to Wallabag 2. ([#1465](https://github.com/fossar/selfoss/pull/1465))
 - Fix DB migration with SQLite that has double-quote string literals disabled (like on FreeBSD). ([#1489](https://github.com/fossar/selfoss/pull/1489))
+- Look for favicon on correct address when feed URI has a port number. ([#1603](https://github.com/fossar/selfoss/pull/1603))
+- **Security:** Reject unsupported configuration types. ([#1638](https://github.com/fossar/selfoss/pull/1638))
+- Support HTTP 2 only sites. ([#1661](https://github.com/fossar/selfoss/pull/1661))
+- Fix error 500 when marking an empty list of items as read with MySQL or PostgreSQL. ([#1667](https://github.com/fossar/selfoss/pull/1667))
 
 ### Customization changes
 - Custom spouts must explicitly pass `null` to `Item::__construct()` when they do not need the `extraData` argument. ([#1415](https://github.com/fossar/selfoss/pull/1415))
@@ -33,6 +41,8 @@
 - Custom spouts are expected to pass `HtmlString` object to items’ title and content. ([#1368](https://github.com/fossar/selfoss/pull/1368))
 - Spouts can fetch item contents lazily by passing a function as `content` to `Item`. ([#1413](https://github.com/fossar/selfoss/pull/1413))
 - Spouts’ `name`, `description` and `params` properties now require a type hint. ([#1425](https://github.com/fossar/selfoss/pull/1425))
+- All classes other than spouts were made final. ([#1546](https://github.com/fossar/selfoss/pull/1546))
+- The debugging level (in selfoss ≤ 2.18 set by modifying `src/common.php`) can be changed in the `config.ini` using `debug` key. ([#1298](https://github.com/fossar/selfoss/pull/1298))
 
 ### Other changes
 - `tidy` PHP extension is now required if you want to use “Content extractor” spout. ([#1392](https://github.com/fossar/selfoss/pull/1392))
@@ -44,11 +54,19 @@
 - Authentication system has been rewritten to allow more methods in the future. ([#1491](https://github.com/fossar/selfoss/pull/1491))
 - Authentication will now also log user out when the credentials in the config change. ([#1491](https://github.com/fossar/selfoss/pull/1491))
 - Requests from loopback IP address now give full access to all operations, not just update. Additionally, IPv6 loopback address is recognized and proxies are ignored. ([#1491](https://github.com/fossar/selfoss/pull/1491))
+- [Tracy](https://tracy.nette.org/) is now used for error handling, resulting in much nicer error messages. ([#1298](https://github.com/fossar/selfoss/pull/1298))
 
 #### For developers
 - Back-end source code is now checked using [PHPStan](https://phpstan.org/). ([#1409](https://github.com/fossar/selfoss/pull/1409))
 - [Prettier](https://prettier.io/) is now used for code formatting. ([#1493](https://github.com/fossar/selfoss/pull/1493))
 - Several `npm run` scripts were renamed for consistency: `analyse:server` → `check:server:phpstan`, `cs:server` → `check:server:cs`, `lint:server` → `check:server:lint`. ([#1494](https://github.com/fossar/selfoss/pull/1494))
+- Front-end code was converted to TypeScript. ([#1457](https://github.com/fossar/selfoss/pull/1457))
+- Last use of [F3 framework](https://fatfreeframework.com) was removed. So long… ([#1298](https://github.com/fossar/selfoss/pull/1298))
+- All non-spout classes were moved to a single PSR-4 namespace: `Selfoss\`. ([#1532](https://github.com/fossar/selfoss/pull/1532))
+
+### API changes
+
+- *API 8.0.0*: Remove `GET /source` API, it was only used by us and was redundant with `GET /sources/spouts` ([#1539](https://github.com/fossar/selfoss/pull/1539))
 
 
 ## 2.19 – 2022-10-12

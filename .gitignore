@@ -18,3 +18,4 @@ phpstan.neon
 vendor/
 .php-cs-fixer.cache
 __pycache__
+.direnv/

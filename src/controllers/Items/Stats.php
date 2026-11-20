@@ -2,27 +2,23 @@
 
 declare(strict_types=1);
 
-namespace controllers\Items;
+namespace Selfoss\controllers\Items;
 
-use helpers\Authentication;
-use helpers\View;
+use Selfoss\daos;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\View;
 
 /**
  * Controller for viewing item statistics
  */
-class Stats {
-    private Authentication $authentication;
-    private \daos\Items $itemsDao;
-    private \daos\Sources $sourcesDao;
-    private \daos\Tags $tagsDao;
-    private View $view;
-
-    public function __construct(Authentication $authentication, \daos\Items $itemsDao, \daos\Sources $sourcesDao, \daos\Tags $tagsDao, View $view) {
-        $this->authentication = $authentication;
-        $this->itemsDao = $itemsDao;
-        $this->sourcesDao = $sourcesDao;
-        $this->tagsDao = $tagsDao;
-        $this->view = $view;
+final readonly class Stats {
+    public function __construct(
+        private Authentication $authentication,
+        private daos\Items $itemsDao,
+        private daos\Sources $sourcesDao,
+        private daos\Tags $tagsDao,
+        private View $view
+    ) {
     }
 
     /**

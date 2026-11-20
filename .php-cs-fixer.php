@@ -8,6 +8,8 @@ $finder = PhpCsFixer\Finder::create()
 
 $rules = [
     '@Symfony' => true,
+    '@autoPHPMigration' => true,
+    '@autoPHPMigration:risky' => true,
     // why would anyone put braces on different line
     'braces_position' => [
         'functions_opening_brace' => 'same_line',
@@ -29,6 +31,8 @@ $rules = [
     'phpdoc_align' => false,
     'phpdoc_no_empty_return' => false,
     'phpdoc_summary' => false,
+    // Useful for PHPStan in phtml templates.
+    'phpdoc_to_comment' => ['ignored_tags' => ['var']],
     'trailing_comma_in_multiline' => false,
     'yoda_style' => false,
     'semicolon_after_instruction' => false,
@@ -37,6 +41,7 @@ $rules = [
     'dir_constant' => true,
     'echo_tag_syntax' => ['format' => 'short'],
     'modernize_types_casting' => true,
+    'multiline_promoted_properties' => true,
     'no_alias_functions' => true,
     'ordered_imports' => true,
     'phpdoc_add_missing_param_annotation' => true,
@@ -47,6 +52,9 @@ $rules = [
     'strict_param' => true,
     'declare_strict_types' => true,
     'simple_to_complex_string_variable' => true,
+
+    // Contradicts Rector
+    'random_api_migration' => false,
 ];
 
 $config = new PhpCsFixer\Config();

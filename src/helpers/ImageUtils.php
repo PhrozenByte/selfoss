@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 /**
  * Helper class for loading images
@@ -11,7 +11,7 @@ namespace helpers;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class ImageUtils {
+final class ImageUtils {
     private const ICON_REL_WEIGHTS = [
         'apple-touch-icon-precomposed' => 3,
         'apple-touch-icon' => 2,
@@ -87,22 +87,22 @@ class ImageUtils {
         usort($icons, Misc::compareBy(
             // largest icons first
             [
-                fn($val) => (int) $val['sizes'],
+                fn($val): int => (int) $val['sizes'],
                 Misc::ORDER_DESC,
             ],
 
             // then by rel priority
             [
-                fn($val) => self::ICON_REL_WEIGHTS[$val['rel']],
+                fn($val): int => self::ICON_REL_WEIGHTS[$val['rel']],
                 Misc::ORDER_DESC,
             ],
 
             // and finally by order to make the sorting stable
-            'order'
+            ['order']
         ));
 
         return array_map(
-            fn($i) => $i['url'],
+            fn(array $i): string => $i['url'],
             $icons
         );
     }
@@ -122,12 +122,12 @@ class ImageUtils {
             $imgsrc_regex = '#<\s*img [^\>]*src\s*=\s*(["\'])(.*?)\1#im';
             if (preg_match($imgsrc_regex, $html, $matches)) {
                 return htmlspecialchars_decode($matches[2]);
-            } else {
-                return null;
             }
-        } else {
+
             return null;
         }
+
+        return null;
     }
 
     /**

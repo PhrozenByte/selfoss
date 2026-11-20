@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use InvalidArgumentException;
 
-class Misc {
+final class Misc {
     public const ORDER_ASC = 1;
     public const ORDER_DESC = -1;
 
@@ -17,12 +17,9 @@ class Misc {
     /**
      * Compare two values for use in sort functions.
      *
-     * @param mixed $a
-     * @param mixed $b
-     *
      * @return self::CMP_* mutual ordering
      */
-    public static function compare($a, $b) {
+    public static function compare(mixed $a, mixed $b): int {
         return $a <=> $b;
     }
 
@@ -32,18 +29,16 @@ class Misc {
      * Callable transformations will transform the compared values and then compare them,
      * other types will be used as keys to access array array values to be compared.
      *
-     * @param callable|array-key|array{callable|array-key, self::ORDER_*} ...$transformations
+     * @param array{0: callable|array-key, 1?: self::ORDER_*} ...$transformations
      *
      * @return callable(mixed, mixed): (self::CMP_*) comparator
      */
-    public static function compareBy(...$transformations) {
+    public static function compareBy(array ...$transformations): callable {
         if (count($transformations) > 0) {
-            return function($a, $b) use ($transformations) {
+            return function(array $a, array $b) use ($transformations) {
                 foreach ($transformations as $transformation) {
-                    $order = self::ORDER_ASC;
-                    if (is_array($transformation)) {
-                        [$transformation, $order] = $transformation;
-                    }
+                    [$transformation, $order] = $transformation + [null, self::ORDER_ASC];
+
                     if (is_callable($transformation)) {
                         $comparison = $transformation($a) <=> $transformation($b);
                     } else {
@@ -61,18 +56,16 @@ class Misc {
                 return $comparison;
             };
         } else {
-            return [self::class, 'compare'];
+            return self::compare(...);
         }
     }
 
     /**
      * Ensure the passed value is numeric and converts it to integer.
      *
-     * @param mixed $value
-     *
      * @throws InvalidArgumentException when argument is not a numberic value
      */
-    public static function forceId($value): int {
+    public static function forceId(mixed $value): int {
         if (is_numeric($value)) {
             return (int) $value;
         }
@@ -91,7 +84,7 @@ class Misc {
      */
     public static function forceIds($value): array {
         if (is_array($value)) {
-            return array_map([self::class, 'forceId'], $value);
+            return array_map(self::forceId(...), $value);
         }
 
         return [

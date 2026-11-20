@@ -5,35 +5,19 @@ declare(strict_types=1);
 namespace spouts;
 
 use DateTimeInterface;
-use helpers\HtmlString;
+use Selfoss\helpers\HtmlString;
 
 /**
  * Value object representing a source item (e.g. an article).
  *
  * @template-covariant Extra type of extra data
  */
-class Item {
-    /** @var string an unique id for this item */
-    private string $id;
-
-    private HtmlString $title;
-
+final class Item {
     /** @var HtmlString|(callable(static): HtmlString) content */
     private $content;
 
-    private ?string $thumbnail = null;
-
     /** @var (?string)|(callable(static): ?string) icon */
     private $icon;
-
-    private string $link;
-
-    private ?DateTimeInterface $date = null;
-
-    private ?string $author = null;
-
-    /** @var Extra extra data */
-    private $extraData;
 
     /**
      * @param Extra $extraData
@@ -41,25 +25,19 @@ class Item {
      * @param (?string)|(callable(static): ?string) $icon
      */
     public function __construct(
-        string $id,
-        HtmlString $title,
+        /** @var string an unique id for this item */
+        private string $id,
+        private HtmlString $title,
         $content,
-        ?string $thumbnail,
+        private ?string $thumbnail,
         $icon,
-        string $link,
-        ?DateTimeInterface $date,
-        ?string $author,
-        $extraData
+        private string $link,
+        private ?DateTimeInterface $date,
+        private ?string $author,
+        private $extraData
     ) {
-        $this->id = $id;
-        $this->title = $title;
         $this->content = $content;
-        $this->thumbnail = $thumbnail;
         $this->icon = $icon;
-        $this->link = $link;
-        $this->date = $date;
-        $this->author = $author;
-        $this->extraData = $extraData;
     }
 
     /**

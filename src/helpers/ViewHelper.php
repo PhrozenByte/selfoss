@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
 use DateTime;
 
@@ -13,11 +13,10 @@ use DateTime;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class ViewHelper {
-    private Configuration $configuration;
-
-    public function __construct(Configuration $configuration) {
-        $this->configuration = $configuration;
+final readonly class ViewHelper {
+    public function __construct(
+        private Configuration $configuration
+    ) {
     }
 
     /**
@@ -62,7 +61,7 @@ class ViewHelper {
      * @return string with replaced img tags
      */
     public static function lazyimg(string $content): string {
-        $content = preg_replace_callback("/<img(?P<pre>[^<]+)src=(?:['\"])(?P<src>[^\"']*)(?:['\"])(?P<post>[^<]*)>/i", function(array $matches) {
+        $content = preg_replace_callback("/<img(?P<pre>[^<]+)src=(?:['\"])(?P<src>[^\"']*)(?:['\"])(?P<post>[^<]*)>/i", function(array $matches): string {
             $width = null;
             $height = null;
 
@@ -80,8 +79,8 @@ class ViewHelper {
                 $height = 600;
             } else {
                 // assume a 4:3 photo
-                $width = $width ?? $height * 4 / 3;
-                $height = $height ?? $width * 3 / 4;
+                $width ??= $height * 4 / 3;
+                $height ??= $width * 3 / 4;
             }
 
             $placeholder = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='$width' height='$height'><rect fill='%2395c9c5' width='100%' height='100%'/></svg>";
@@ -110,7 +109,7 @@ class ViewHelper {
 
         $content = preg_replace_callback(
             "/<img([^<]+)src=(['\"])([^\"']*)(['\"])([^<]*)>/i",
-            fn(array $matches) => '<img' . $matches[1] . 'src=' . $matches[2] . $camo->camoHttpOnly($matches[3]) . $matches[4] . $matches[5] . '>',
+            fn(array $matches): string => '<img' . $matches[1] . 'src=' . $matches[2] . $camo->camoHttpOnly($matches[3]) . $matches[4] . $matches[5] . '>',
             $content
         );
 
@@ -139,7 +138,7 @@ class ViewHelper {
      *     author: string,
      *     tags: string[],
      * } $item item to modify
-     * @param \controllers\Tags $tagsController tags controller
+     * @param \Selfoss\controllers\Tags $tagsController tags controller
      * @param ?array<array{tag: string, color: string}> $tags list of tags
      * @param ?string $search search query
      *
@@ -164,7 +163,7 @@ class ViewHelper {
      *     tags: StringKeyedArray<array{backColor: string, foreColor: string}>,
      * } modified item
      */
-    public function preprocessEntry(array $item, \controllers\Tags $tagsController, ?array $tags = null, ?string $search = null): array {
+    public function preprocessEntry(array $item, \Selfoss\controllers\Tags $tagsController, ?array $tags = null, ?string $search = null): array {
         // parse tags and assign tag colors
         $item['tags'] = $tagsController->tagsAddColors($item['tags'], $tags);
 

@@ -5,7 +5,7 @@
 
 declare(strict_types=1);
 
-namespace helpers\Filters;
+namespace Selfoss\helpers\Filters;
 
 /**
  * Filter that admits a list of items iff the inner filter admits any of them.
@@ -14,15 +14,14 @@ namespace helpers\Filters;
  *
  * @implements Filter<array<T>>
  */
-final class DisjunctionFilter implements Filter {
-    /** @var Filter<T> */
-    private Filter $filter;
-
+final readonly class DisjunctionFilter implements Filter {
     /**
      * @param Filter<T> $filter
      */
-    public function __construct($filter) {
-        $this->filter = $filter;
+    public function __construct(
+        /** @var Filter<T> */
+        private Filter $filter
+    ) {
     }
 
     /**

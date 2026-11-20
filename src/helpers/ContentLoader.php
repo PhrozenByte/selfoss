@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace helpers;
+namespace Selfoss\helpers;
 
-use helpers\Filters\AcceptingFilter;
-use helpers\Filters\FilterFactory;
-use helpers\Filters\FilterSyntaxError;
 use Monolog\Logger;
+use Selfoss\daos;
+use Selfoss\helpers\Filters\AcceptingFilter;
+use Selfoss\helpers\Filters\FilterFactory;
+use Selfoss\helpers\Filters\FilterSyntaxError;
 
 /**
  * Helper class for loading extern items
@@ -16,32 +17,22 @@ use Monolog\Logger;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class ContentLoader {
+final readonly class ContentLoader {
     public const ICON_FORMAT = Image::FORMAT_PNG;
     public const THUMBNAIL_FORMAT = Image::FORMAT_JPEG;
 
-    private Configuration $configuration;
-    private \daos\DatabaseInterface $database;
-    private IconStore $iconStore;
-    private Image $imageHelper;
-    private \daos\Items $itemsDao;
-    private Logger $logger;
-    private \daos\Sources $sourcesDao;
-    private SpoutLoader $spoutLoader;
-    private ThumbnailStore $thumbnailStore;
-    private WebClient $webClient;
-
-    public function __construct(Configuration $configuration, \daos\DatabaseInterface $database, IconStore $iconStore, Image $imageHelper, \daos\Items $itemsDao, Logger $logger, \daos\Sources $sourcesDao, SpoutLoader $spoutLoader, ThumbnailStore $thumbnailStore, WebClient $webClient) {
-        $this->configuration = $configuration;
-        $this->database = $database;
-        $this->iconStore = $iconStore;
-        $this->imageHelper = $imageHelper;
-        $this->itemsDao = $itemsDao;
-        $this->logger = $logger;
-        $this->sourcesDao = $sourcesDao;
-        $this->spoutLoader = $spoutLoader;
-        $this->thumbnailStore = $thumbnailStore;
-        $this->webClient = $webClient;
+    public function __construct(
+        private Configuration $configuration,
+        private daos\DatabaseInterface $database,
+        private IconStore $iconStore,
+        private Image $imageHelper,
+        private daos\Items $itemsDao,
+        private Logger $logger,
+        private daos\Sources $sourcesDao,
+        private SpoutLoader $spoutLoader,
+        private ThumbnailStore $thumbnailStore,
+        private WebClient $webClient
+    ) {
     }
 
     /**
@@ -83,7 +74,7 @@ class ContentLoader {
      *
      * @param mixed $source the current source
      */
-    public function fetch($source): void {
+    public function fetch(mixed $source): void {
         $lastEntry = $source['lastentry'];
 
         // at least 20 seconds wait until next update of a given source
@@ -164,9 +155,7 @@ class ContentLoader {
 
                 // test date: continue with next if item too old
                 $itemDate = $item->getDate();
-                if ($itemDate === null) {
-                    $itemDate = new \DateTimeImmutable();
-                }
+                $itemDate ??= new \DateTimeImmutable();
                 if ($minDate !== null && $itemDate < $minDate) {
                     $this->logger->debug('item "' . $titlePlainText . '" (' . $itemDate->format(\DateTime::ATOM) . ') older than ' . $this->configuration->itemsLifetime . ' days');
                     continue;
@@ -297,7 +286,7 @@ class ContentLoader {
      *
      * @return HtmlString sanitized content
      */
-    protected function sanitizeContent(HtmlString $content): HtmlString {
+    private function sanitizeContent(HtmlString $content): HtmlString {
         return HtmlString::fromRaw(htmLawed(
             $content->getRaw(),
             [
@@ -319,7 +308,7 @@ class ContentLoader {
      *
      * @return HtmlString sanitized content
      */
-    protected function sanitizeField(HtmlString $value): HtmlString {
+    private function sanitizeField(HtmlString $value): HtmlString {
         return HtmlString::fromRaw(htmLawed(
             $value->getRaw(),
             [
@@ -336,7 +325,7 @@ class ContentLoader {
      *
      * @return ?string path in the thumbnails directory
      */
-    protected function fetchThumbnail(string $url): ?string {
+    private function fetchThumbnail(string $url): ?string {
         try {
             $data = $this->webClient->request($url);
             $format = self::THUMBNAIL_FORMAT;
@@ -344,9 +333,9 @@ class ContentLoader {
 
             if ($image !== null) {
                 return $this->thumbnailStore->store($url, $image->getData());
-            } else {
-                $this->logger->error('thumbnail generation error: ' . $url);
             }
+
+            $this->logger->error('thumbnail generation error: ' . $url);
         } catch (\Throwable $e) {
             $this->logger->error("failed to retrieve thumbnail $url,", ['exception' => $e]);
 
@@ -363,7 +352,7 @@ class ContentLoader {
      *
      * @return ?string path in the favicons directory
      */
-    protected function fetchIcon(string $url): ?string {
+    private function fetchIcon(string $url): ?string {
         try {
             $data = $this->webClient->request($url);
             $format = Image::FORMAT_PNG;
@@ -371,9 +360,9 @@ class ContentLoader {
 
             if ($image !== null) {
                 return $this->iconStore->store($url, $image->getData());
-            } else {
-                $this->logger->error('icon generation error: ' . $url);
             }
+
+            $this->logger->error('icon generation error: ' . $url);
         } catch (\Throwable $e) {
             $this->logger->error("failed to retrieve image $url,", ['exception' => $e]);
 
@@ -435,14 +424,14 @@ class ContentLoader {
         // delete orphaned thumbnails
         $this->logger->debug('delete orphaned thumbnails');
         $this->thumbnailStore->cleanup(
-            fn($file) => $this->itemsDao->hasThumbnail($file)
+            fn(string $file): bool => $this->itemsDao->hasThumbnail($file)
         );
         $this->logger->debug('delete orphaned thumbnails finished');
 
         // delete orphaned icons
         $this->logger->debug('delete orphaned icons');
         $this->iconStore->cleanup(
-            fn($file) => $this->itemsDao->hasIcon($file)
+            fn(string $file): bool => $this->itemsDao->hasIcon($file)
         );
         $this->logger->debug('delete orphaned icons finished');
 
@@ -458,7 +447,7 @@ class ContentLoader {
      * @param mixed $source source object
      * @param ?int $lastEntry timestamp of the newest item or NULL when no items were added
      */
-    protected function updateSource($source, ?int $lastEntry): void {
+    private function updateSource(mixed $source, ?int $lastEntry): void {
         // remove previous error
         if ($source['error'] !== null) {
             $this->sourcesDao->error($source['id'], '');

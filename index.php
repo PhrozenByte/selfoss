@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Psr\Container\ContainerInterface;
+use Selfoss\controllers;
 
 require __DIR__ . '/src/common.php';
 
@@ -108,10 +109,6 @@ $router->get('/source/params', function() use ($container): void {
 $router->get('/sources', function() use ($container): void {
     // json
     $container->get(controllers\Sources::class)->show();
-});
-$router->get('/source', function() use ($container): void {
-    // json
-    $container->get(controllers\Sources::class)->add();
 });
 $router->get('/sources/list', function() use ($container): void {
     // json

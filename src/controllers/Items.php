@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace controllers;
+namespace Selfoss\controllers;
 
-use daos\ItemOptions;
 use DateTimeInterface;
-use helpers\Authentication;
-use helpers\Misc;
-use helpers\Request;
-use helpers\View;
 use InvalidArgumentException;
+use Selfoss\daos\ItemOptions;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\Misc;
+use Selfoss\helpers\Request;
+use Selfoss\helpers\View;
 
 /**
  * Controller for item handling
@@ -19,22 +19,13 @@ use InvalidArgumentException;
  * @license    GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)
  * @author     Tobias Zeising <tobias.zeising@aditu.de>
  */
-class Items {
-    private Authentication $authentication;
-    private \daos\Items $itemsDao;
-    private Request $request;
-    private View $view;
-
+final readonly class Items {
     public function __construct(
-        Authentication $authentication,
-        \daos\Items $itemsDao,
-        Request $request,
-        View $view
+        private Authentication $authentication,
+        private \Selfoss\daos\Items $itemsDao,
+        private Request $request,
+        private View $view
     ) {
-        $this->authentication = $authentication;
-        $this->itemsDao = $itemsDao;
-        $this->request = $request;
-        $this->view = $view;
     }
 
     /**
@@ -46,7 +37,6 @@ class Items {
     public function mark(?string $itemId = null): void {
         $this->authentication->ensureIsPrivileged();
 
-        $ids = null;
         if ($itemId !== null) {
             $ids = [$itemId];
         } else {
@@ -64,11 +54,14 @@ class Items {
         // validate id or ids
         try {
             $ids = Misc::forceIds($ids);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             $this->view->error('invalid id');
         }
 
-        $this->itemsDao->mark($ids);
+        // The DAO needs a non-empty list: "IN ()" is invalid SQL on MySQL and PostgreSQL.
+        if (count($ids) > 0) {
+            $this->itemsDao->mark($ids);
+        }
 
         $return = [
             'success' => true,
@@ -88,7 +81,7 @@ class Items {
 
         try {
             $itemId = Misc::forceId($itemId);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             $this->view->error('invalid id');
         }
 
@@ -110,7 +103,7 @@ class Items {
 
         try {
             $itemId = Misc::forceId($itemId);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             $this->view->error('invalid id');
         }
 
@@ -131,7 +124,7 @@ class Items {
 
         try {
             $itemId = Misc::forceId($itemId);
-        } catch (InvalidArgumentException $e) {
+        } catch (InvalidArgumentException) {
             $this->view->error('invalid id');
         }
 
@@ -145,7 +138,7 @@ class Items {
      * returns items as json string
      * json
      */
-    public function listItems(): void {
+    public function listItems(): never {
         $this->authentication->ensureCanRead();
 
         // parse params
@@ -154,7 +147,7 @@ class Items {
         // get items
         $items = $this->itemsDao->get($options);
 
-        $items = array_map(function(array $item) {
+        $items = array_map(function(array $item): array {
             $stringifiedDates = [
                 'datetime' => $item['datetime']->format(DateTimeInterface::ATOM),
                 'updatetime' => $item['updatetime']->format(DateTimeInterface::ATOM),

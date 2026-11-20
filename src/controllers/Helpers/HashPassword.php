@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-namespace controllers\Helpers;
+namespace Selfoss\controllers\Helpers;
 
-use helpers\Authentication;
-use helpers\View;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\View;
 
 /**
  * Controller for user related tasks
  */
-final class HashPassword {
-    private Authentication $authentication;
-    private View $view;
-
-    public function __construct(Authentication $authentication, View $view) {
-        $this->authentication = $authentication;
-        $this->view = $view;
+final readonly class HashPassword {
+    public function __construct(
+        private Authentication $authentication,
+        private View $view
+    ) {
     }
 
     /**

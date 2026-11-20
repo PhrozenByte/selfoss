@@ -5,12 +5,12 @@
 
 declare(strict_types=1);
 
-namespace helpers\Authentication\Services;
+namespace Selfoss\helpers\Authentication\Services;
 
-use helpers\Authentication\AuthenticationService;
-use helpers\Configuration;
-use helpers\Session;
 use Monolog\Logger;
+use Selfoss\helpers\Authentication\AuthenticationService;
+use Selfoss\helpers\Configuration;
+use Selfoss\helpers\Session;
 
 /**
  * Authentication method that verifies credentials given using
@@ -24,16 +24,13 @@ use Monolog\Logger;
 final class RequestOrSession implements AuthenticationService {
     private const SESSION_KEY = 'authorized';
 
-    private Configuration $configuration;
-    private Logger $logger;
-    private Session $session;
-
     private ?bool $authorized = null;
 
-    public function __construct(Configuration $configuration, Logger $logger, Session $session) {
-        $this->configuration = $configuration;
-        $this->logger = $logger;
-        $this->session = $session;
+    public function __construct(
+        private readonly Configuration $configuration,
+        private readonly Logger $logger,
+        private readonly Session $session
+    ) {
     }
 
     public function canRead(): bool {
@@ -45,9 +42,7 @@ final class RequestOrSession implements AuthenticationService {
     }
 
     public function isPrivileged(): bool {
-        if ($this->authorized === null) {
-            $this->authorized = $this->checkSession() || $this->checkRequest();
-        }
+        $this->authorized ??= $this->checkSession() || $this->checkRequest();
 
         return $this->authorized;
     }

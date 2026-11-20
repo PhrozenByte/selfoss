@@ -3,9 +3,8 @@
     "description": "Multipurpose rss reader, live stream, mashup, aggregation web application",
     "type": "project",
     "require": {
-        "php": ">= 7.4.0",
+        "php": ">= 8.2.0",
         "ext-gd": "*",
-        "bcosca/fatfree-core": "^3.8",
         "bramus/router": "^1.6",
         "fossar/guzzle-transcoder": "^0.3.0",
         "fossar/htmlawed": "^1.2.4.1",
@@ -14,27 +13,29 @@
         "guzzlehttp/psr7": "^2.0",
         "http-interop/response-sender": "^1.0",
         "j0k3r/graby": "^2.0",
-        "lordelph/icofileloader": "^2.0",
+        "lordelph/icofileloader": "^3.0",
         "mibe/feedwriter": "^1.0",
-        "monolog/monolog": "^2.0",
+        "monolog/monolog": "^2.10",
         "php-http/guzzle7-adapter": "^1.0",
-        "psr/container": "^1.1",
-        "psr/simple-cache": "^1.0",
+        "psr/container": "^2.0",
+        "psr/log": "^3.0",
+        "psr/simple-cache": "^3.0",
         "simplepie/simplepie": "^1.8",
         "slince/di": "^3.2",
         "smottt/wideimage": "^1.1",
-        "symfony/cache": "^5.4",
-        "symfony/polyfill-php80": "^1.26",
+        "symfony/cache": "^7.4",
+        "tracy/tracy": "^2.11",
         "violet/streaming-json-encoder": "^1.1",
         "vstelmakh/url-highlight": "^3.0",
         "willwashburn/phpamo": "^1.0"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.0",
+        "php-cs-fixer/shim": "^3.92",
         "php-parallel-lint/php-parallel-lint": "^1.0",
         "phpstan/phpstan": "^2.0",
         "phpstan/phpstan-deprecation-rules": "^2.0",
-        "symfony/phpunit-bridge": "^7.0"
+        "rector/rector": "^2.2",
+        "symfony/phpunit-bridge": "^8.0"
     },
     "license": "GPL-3.0",
     "authors": [
@@ -45,16 +46,14 @@
     ],
     "autoload": {
         "psr-4": {
-            "controllers\\": "src/controllers/",
-            "daos\\": "src/daos/",
-            "helpers\\": "src/helpers/",
             "spouts\\": "src/spouts/",
+            "Selfoss\\": "src/",
             "Tests\\": "tests/"
         }
     },
     "config": {
         "platform": {
-            "php": "7.4.0"
+            "php": "8.2.0"
         },
         "allow-plugins": false,
         "sort-packages": true
@@ -64,6 +63,7 @@
         "fix": "php-cs-fixer fix --verbose --diff",
         "lint": "parallel-lint src tests",
         "phpstan": "phpstan analyse --memory-limit 512M",
+        "rector": "rector process",
         "test": "simple-phpunit --bootstrap tests/bootstrap.php tests"
     }
 }

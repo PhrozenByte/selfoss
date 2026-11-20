@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace controllers\Opml;
+namespace Selfoss\controllers\Opml;
 
-use helpers\Authentication;
-use helpers\View;
 use Monolog\Logger;
+use Selfoss\daos;
+use Selfoss\helpers\Authentication;
+use Selfoss\helpers\View;
 use SimpleXMLElement;
 
 /**
@@ -17,22 +18,18 @@ use SimpleXMLElement;
  * @author     Michael Moore <stuporglue@gmail.com>
  * @author     Sean Rand <asanernd@gmail.com>
  */
-class Import {
+// TODO: Make readonly.
+final class Import {
     /** @var array<string, array{id: int, tags: string[]}> Sources that have been imported from the OPML file */
     private array $imported = [];
 
-    private Authentication $authentication;
-    private Logger $logger;
-    private \daos\Sources $sourcesDao;
-    private \daos\Tags $tagsDao;
-    private View $view;
-
-    public function __construct(Authentication $authentication, Logger $logger, \daos\Sources $sourcesDao, \daos\Tags $tagsDao, View $view) {
-        $this->authentication = $authentication;
-        $this->logger = $logger;
-        $this->sourcesDao = $sourcesDao;
-        $this->tagsDao = $tagsDao;
-        $this->view = $view;
+    public function __construct(
+        private readonly Authentication $authentication,
+        private readonly Logger $logger,
+        private readonly daos\Sources $sourcesDao,
+        private readonly daos\Tags $tagsDao,
+        private readonly View $view
+    ) {
     }
 
     /**
@@ -60,7 +57,6 @@ class Import {
                 throw new \Exception('Missing SimpleXML PHP extension. Please install/enable it as described on https://www.php.net/manual/en/simplexml.installation.php');
             }
 
-            $subs = false;
             $previousUseErrors = libxml_use_internal_errors(true);
             try {
                 $subs = simplexml_load_file($opml['tmp_name']);
@@ -171,7 +167,7 @@ class Import {
      *
      * @return true|string true on success or item title on error
      */
-    private function addSubscription(SimpleXMLElement $xml, array $tags) {
+    private function addSubscription(SimpleXMLElement $xml, array $tags): bool|string {
         // OPML Required attributes: text, xmlUrl, type
         // Optional attributes: title, htmlUrl, language, title, version
         // Selfoss namespaced attributes: spout, params
